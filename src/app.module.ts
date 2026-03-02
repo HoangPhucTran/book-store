@@ -4,7 +4,10 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { BookstoreModule } from './bookstore/bookstore.module';
+import { UserController } from './user/user.controller';
+import { UserModule } from './user/user.module';
+import { OrderModule } from './order/order.module';
+import { BookModule } from './book/book.module';
 
 @Module({
   imports: [
@@ -25,9 +28,11 @@ import { BookstoreModule } from './bookstore/bookstore.module';
       
     }),
 
-    BookstoreModule,
+    UserModule,
+    OrderModule,
+    BookModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, UserController],
   providers: [AppService],
 })
 
