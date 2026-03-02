@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:18
+    container_name: postgres-container
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_DB: bookstore
+    ports: 
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+  
+volumes:
+  postgres_data:
+    driver: local
