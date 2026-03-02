@@ -19,9 +19,6 @@ export class Order {
     @JoinColumn({ name: 'users_id', referencedColumnName: 'id' })
     user: User;
 
-    @Column({name: 'password'})
-    password: string;
-
     @Column({name: 'total_price'})
     totalPrice: number;
 
