@@ -9,6 +9,8 @@ import { OrderModule } from './order/order.module';
 import { BookModule } from './book/book.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -34,8 +36,17 @@ import { createKeyv } from '@keyv/redis';
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => ({
-        stores: [createKeyv('redis://localhost:6379')],
-        ttl: 1000 * 60 * 60,
+        stores: [
+          createKeyv({
+            url: 'redis://localhost:6379',
+            socket: {
+              connectTimeout: 2000,
+              reconnectStrategy: () => false,
+            },
+          }),
+        ],
+        ttl: 1000 * 60 * 10,
+        ignoreCacheErrors: true,
       }),
     }),
 
@@ -44,7 +55,12 @@ import { createKeyv } from '@keyv/redis';
     BookModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CacheInterceptor,
+    }
+  ],
 })
 
 export class AppModule {
