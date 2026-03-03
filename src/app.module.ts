@@ -11,15 +11,13 @@ import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv } from '@keyv/redis';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { NatsClientModule } from './nats-client/nats-client.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [
-        `.env.${process.env.NODE_ENV || 'development'}`,
-        '.env',
-      ],
+      envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
     }),
 
     TypeOrmModule.forRoot({
@@ -53,6 +51,7 @@ import { CacheInterceptor } from '@nestjs/cache-manager';
     UserModule,
     OrderModule,
     BookModule,
+    NatsClientModule,
   ],
   controllers: [AppController],
   providers: [AppService,
