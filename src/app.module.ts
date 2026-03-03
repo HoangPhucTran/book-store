@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { UserController } from './user/user.controller';
 import { UserModule } from './user/user.module';
 import { OrderModule } from './order/order.module';
 import { BookModule } from './book/book.module';
@@ -15,7 +14,10 @@ import { createKeyv } from '@keyv/redis';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ".env"
+      envFilePath: [
+        `.env.${process.env.NODE_ENV || 'development'}`,
+        '.env',
+      ],
     }),
 
     TypeOrmModule.forRoot({
@@ -27,26 +29,19 @@ import { createKeyv } from '@keyv/redis';
       database: process.env.DB_NAME,
       autoLoadEntities: true,
       logging: true,
-      
+    }),
+
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => ({
+        stores: [createKeyv('redis://localhost:6379')],
+        ttl: 1000 * 60 * 60,
+      }),
     }),
 
     UserModule,
     OrderModule,
     BookModule,
-  ],
-  controllers: [AppController, UserController],
-      envFilePath: [
-        `.env.${process.env.NODE_ENV || 'development'}`,
-        '.env',
-      ]
-    }),
-    CacheModule.registerAsync({
-      useFactory: async () => ({
-        stores: [createKeyv('redis://localhost:6379')],
-        ttl: 1000 * 60 * 60,
-      }),
-      isGlobal: true,
-    }),
   ],
   controllers: [AppController],
   providers: [AppService],
