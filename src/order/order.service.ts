@@ -1,14 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './entities/order.entity';
 import { Repository } from 'typeorm';
 import { OrderDto } from './dtos/order.dto';
+import { ClientProxy } from '@nestjs/microservices';
 
 @Injectable()
 export class OrderService {
     constructor (
         @InjectRepository(Order)
         private readonly orderRepository: Repository<Order>,
+        @Inject('NATS_SERVICE') private natsClient: ClientProxy
     ) {}
 
     async findAll() : Promise<Order[]> {
@@ -23,14 +25,20 @@ export class OrderService {
 
     async add(orderDto: OrderDto): Promise<Order> {
         try {
+            console.log('orderDto =', orderDto);
             const order = this.orderRepository.create({
                 userId: orderDto.userId,
                 totalPrice: orderDto.totalPrice,
                 orderStatus: orderDto.orderStatus
             });
-
+            
             const saveOrder = await this.orderRepository.save(order);
-
+            
+            console.log('Send event:', orderDto);
+            this.natsClient.send('order.created', orderDto).subscribe({
+                complete: () => console.log('Event published: order.created'),
+                error: (err) => console.log('Error publishing event:', err),
+            });
             return saveOrder;
         } catch (er) {
             throw new Error('Create order failed: ' + er.message);
