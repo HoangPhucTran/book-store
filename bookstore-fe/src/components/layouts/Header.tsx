@@ -1,4 +1,5 @@
 import { Avatar, Stack } from "@mui/material";
+import NavbarBreadcrumbs from "./NavbarBreadcrumbs";
 
 export default function Header() {
 
@@ -17,6 +18,8 @@ export default function Header() {
         boxShadow: 1,
       }}
     >
+      <NavbarBreadcrumbs />
+
       {/* RIGHT */}
       <Stack direction="row" spacing={1} alignItems="center">
         {/* <Search />

@@ -6,7 +6,7 @@ export default function BaseLayout() {
 
     return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-            {/* <Header /> */}
+            <Header />
 
             {/* Body */}
             <div style={{display: 'flex', flex: 1}}>

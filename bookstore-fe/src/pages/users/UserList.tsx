@@ -1,18 +1,21 @@
 import { DataGrid, useGridApiContext } from '@mui/x-data-grid';
-import { Box, Button, Chip } from '@mui/material';
+import { Box, Button, Chip, IconButton } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
+import { addUser, deleteUser, editUser, getUserById, getUsers } from '../../api/users/user.api';
+import DeleteIcon from '@mui/icons-material/Delete';
+import type { UserDto } from '../../dtos/users/user.dto';
+import UserPopupForm from '../../components/users/UserPopupForm';
+import AlertDialogForm from '../../components/common/AlertDialog';
 
 const SeqCell = (params: GridRenderCellParams) => {
   const apiRef = useGridApiContext();
 
-  const { page, pageSize } =
-    apiRef.current.state.pagination.paginationModel;
+  const { page, pageSize } = apiRef.current.state.pagination.paginationModel;
 
-  const index =
-    apiRef.current.getRowIndexRelativeToVisibleRows(params.id);
+  const index = apiRef.current.getRowIndexRelativeToVisibleRows(params.id);
 
   return page * pageSize + index + 1;
 };
@@ -21,22 +24,25 @@ export default function UserTable() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [openForm, setOpenForm] = useState(false);
-  const [open, setOpen] = useState(false);
-//   const [result, setResult] = useState<ImportResult | any>(null);
-  const [alert, setAlert] = useState<{
-    type: 'success' | 'error';
-    message: string;
-  } | null>(null);
+  const [pickedUser, setPickedUser] = useState<UserDto | any> (null);
+  const [openAlert, setOpenAlert] = useState(false);
+  const [alertContent, setAlertContent] = useState<string>("");
+  const [alertTitle, setAlertTitle] = useState<string>("");
+  const [confirmAlert, setConfirmAlert] = useState<((result: boolean) => void) | null>(null);
 
   useEffect(() => {
-    // setLoading(true);
-    // const onInit = () => {
-    //   getUsers()
-    //   .then((res) => setRows(res.data))
-    //   .finally(() => setLoading(false));
-    // }
+    setLoading(true);
+    const onInit = () => {
+      getUsers()
+      .then((res) => setRows(res.data))
+      .finally(() => setLoading(false));
+    }
 
-    // onInit();
+    if (!openForm) {
+      setPickedUser(null);
+    }
+
+    onInit();
 
     // connectUserSocket(getToken() || '');
 
@@ -45,7 +51,7 @@ export default function UserTable() {
     //   getUsers().then((res) => setRows(res.data));
     // });
     
-  }, []);
+  }, [openForm]);
 
 //   const processRowUpdate = async (newRow: User, oldRow: User) => {
 //     try {
@@ -56,48 +62,54 @@ export default function UserTable() {
 //       return oldRow; // ✅ rollback
 //     }
 //   };
+
+  const handleEditUser = async (id: string) => {
+    try {
+      const user = await getUserById(id);
+
+      if (!user)
+        return;
+
+      setPickedUser(user);   
+      setOpenForm(true);     
+    } catch (err) {
+      throw err;
+    }
+  };
   
-//   const handleDeleteUser = async (id: string) => {
-//     try {
-//       const res = await deleteUser(id);
+  const handleDeleteUser = async (id: string) => {
+    try {
+      setOpenAlert(true);
+      setAlertTitle("Delete User");
+      setAlertContent("Do you want to delete this user?");
 
-//       setRows((prev) => prev.filter((row) => row.id !== id));
+      setConfirmAlert(() => async(ok: boolean) => {
+        if(!ok)
+          return;
 
-//       setAlert({
-//         type: 'success',
-//         message: 'Delete user thành công',
-//       });
-//     } catch (err) {
-//       setAlert({
-//         type: 'error',
-//         message: 'Delete user thất bại',
-//       });
-//     }
-//   };
+        await deleteUser(id);
+        setRows((prev) => prev.filter((row) => row.id !== id));
+      })
 
-//   const handleCreateUser = async (user: User, avatarFile?: File | null) => {
-//     try {
-//       const response = await createUser({...user, avatarUrl: ''});
-//       const createdUser = response.data;
+    } catch (err) {
+      throw err;
+    }
+  };
 
-//       if(avatarFile) {
-//         await uploadAvatar(createdUser.id,  avatarFile);
-//       }
-//       const res = await getUsers();
-//       setRows(res.data);
-
-//       setAlert({
-//         type: 'success',
-//         message: 'Create user thành công',
-//       });
-//     } catch (err) {
-//       setAlert({
-//         type: 'error',
-//         message: 'Create user thất bại',
-//       });
-//       throw err;
-//     }
-//   };
+  const handleSubmitUser = async (user: UserDto) => {
+    try {
+      if(pickedUser !== null) {
+        await editUser(user);
+      }
+      else {
+        await addUser(user);
+      }
+      const res = await getUsers();
+      setRows(res.data);
+    } catch (err) {
+      throw err;
+    }
+  };
 
 //   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
 //     if (!e.target.files)
@@ -133,7 +145,7 @@ export default function UserTable() {
 
   const userColumns: GridColDef[] = [
     {
-      field: 'seq',
+      field: '',
       headerName: 'SEQ',
       width: 80,
       sortable: false,
@@ -172,8 +184,8 @@ export default function UserTable() {
 
       renderCell: (params) => (
         <Chip
-          label={params.value ? 'ADMIN' : 'USER'}
-          color={params.value ? 'success' : 'error'}
+          label={params.value}
+          color={params.value === 'ADMIN' ? 'success' : 'warning'}
           variant="outlined"
           size="small"
         />
@@ -184,8 +196,8 @@ export default function UserTable() {
       headerName: 'Actions',
       renderCell: (params) => (
         <>
-          {/* <button onClick={() => handleEditUser(params.row)}>Edit</button> */}
-          {/* <IconButton aria-label="delete" onClick={() => handleDeleteUser(params.row.id)}><DeleteIcon /></IconButton> */}
+          <button onClick={() => handleEditUser(params.row.id)}>Edit</button>
+          <IconButton aria-label="delete" onClick={() => handleDeleteUser(params.row.id)}><DeleteIcon /></IconButton>
         </>),
     }
 
@@ -258,10 +270,28 @@ export default function UserTable() {
           </Button>
         </Box>
 
-        {/* <UserFormDialog
+        <UserPopupForm
           open={openForm}
-          onClose={() => setOpenForm(false)}
-        //   onSubmit={handleCreateUser}
-        /> */}
+          user={pickedUser}
+          onClose={() => {
+            setOpenForm(false);
+          }}
+          onSubmit={handleSubmitUser}
+        />
+
+        <AlertDialogForm 
+          open={openAlert}
+          alertTitle={alertTitle}
+          alertContent={alertContent}
+          onClose={() => {
+            setOpenAlert(false);
+            setConfirmAlert(null); // reset
+          }}
+          onSubmit={(result) => {
+            confirmAlert?.(result);
+            setOpenAlert(false);
+            setConfirmAlert(null); // reset
+          }}
+        />
     </Box>);
 }
