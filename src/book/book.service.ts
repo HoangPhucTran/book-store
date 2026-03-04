@@ -45,10 +45,12 @@ export class BookService {
             if (!book)
                 throw new NotFoundException('Book not found');
 
-            Object.assign(book, bookDto);
+            book.author = bookDto.author;
+            book.title = bookDto.title;
+            book.price = bookDto.price;
+            book.stock = bookDto.stock;
 
             const saveBook = await this.bookRepository.save(book);
-
             return saveBook;
         } catch (er) {
             throw new Error('Edit book failed: ' + er.message);

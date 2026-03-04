@@ -1,15 +1,15 @@
 import { DataGrid, useGridApiContext } from '@mui/x-data-grid';
-import { Box, Button, Chip, IconButton } from '@mui/material';
+import { Box, Button, IconButton } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import { addUser, deleteUser, editUser, getUserById, getUsers } from '../../api/users/user.api';
+import { addBook, deleteBook, editBook, getBookById, getBooks } from '../../api/books/book.api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
-import type { UserDto } from '../../dtos/users/user.dto';
-import UserPopupForm from '../../components/users/UserPopupForm';
+import type { BookDto } from '../../dtos/books/book.dto';
 import AlertDialogForm from '../../components/common/AlertDialog';
+import BookPopupForm from '../../components/books/BookPopupForm';
 
 const SeqCell = (params: GridRenderCellParams) => {
   const apiRef = useGridApiContext();
@@ -21,11 +21,11 @@ const SeqCell = (params: GridRenderCellParams) => {
   return page * pageSize + index + 1;
 };
 
-export default function UserTable() {
+export default function BookTable() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [openForm, setOpenForm] = useState(false);
-  const [pickedUser, setPickedUser] = useState<UserDto | null> (null);
+  const [pickedBook, setPickedBook] = useState<BookDto | null> (null);
   const [openAlert, setOpenAlert] = useState(false);
   const [alertContent, setAlertContent] = useState<string>("");
   const [alertTitle, setAlertTitle] = useState<string>("");
@@ -34,7 +34,7 @@ export default function UserTable() {
   useEffect(() => {
     setLoading(true);
     const onInit = () => {
-      getUsers()
+      getBooks()
       .then((res) => setRows(res.data))
       .finally(() => setLoading(false));
     }
@@ -42,9 +42,9 @@ export default function UserTable() {
     onInit();
   },[]);
 
-  const processRowUpdate = async (newRow: UserDto, oldRow: UserDto) => {
+  const processRowUpdate = async (newRow: BookDto, oldRow: BookDto) => {
     try {
-      await editUser(newRow);
+      await editBook(newRow);
       return newRow; // ✅ commit
     } catch (error) {
       console.error(error);
@@ -52,31 +52,31 @@ export default function UserTable() {
     }
   };
 
-  const handleEditUser = async (id: string) => {
+  const handleEditBook = async (id: string) => {
     try {
-      const user = await getUserById(id);
+      const book = await getBookById(id);
 
-      if (!user)
+      if (!book)
         return;
 
-      setPickedUser(user);   
+      setPickedBook(book);   
       setOpenForm(true);     
     } catch (err) {
       throw err;
     }
   };
   
-  const handleDeleteUser = async (id: string) => {
+  const handleDeleteBook = async (id: string) => {
     try {
       setOpenAlert(true);
-      setAlertTitle("Delete User");
-      setAlertContent("Do you want to delete this user?");
+      setAlertTitle("Delete Book");
+      setAlertContent("Do you want to delete this book?");
 
       setConfirmAlert(() => async(ok: boolean) => {
         if(!ok)
           return;
 
-        await deleteUser(id);
+        await deleteBook(id);
         setRows((prev) => prev.filter((row) => row.id !== id));
       })
 
@@ -85,22 +85,22 @@ export default function UserTable() {
     }
   };
 
-  const handleSubmitUser = async (user: UserDto) => {
+  const handleSubmitBook = async (book: BookDto) => {
     try {
-      if(pickedUser !== null) {
-        await editUser(user);
+      if(pickedBook !== null) {
+        await editBook(book);
       }
       else {
-        await addUser(user);
+        await addBook(book);
       }
-      const res = await getUsers();
+      const res = await getBooks();
       setRows(res.data);
     } catch (err) {
       throw err;
     }
   };
 
-  const userColumns: GridColDef[] = [
+  const bookColumns: GridColDef[] = [
     {
       field: '',
       headerName: 'SEQ',
@@ -110,43 +110,28 @@ export default function UserTable() {
       renderCell: (params) => <SeqCell {...params}/>
     },
     {
-      field: 'name',
-      headerName: 'Name',
+      field: 'title',
+      headerName: 'Title',
       flex: 1,
       editable: true,
     },
     {
-      field: 'username',
-      headerName: 'Username',
+      field: 'author',
+      headerName: 'Author',
       flex: 1,
       editable: true,
     },
     {
-      field: 'password',
-      headerName: 'Password',
+      field: 'price',
+      headerName: 'Price',
       flex: 1,
-      editable: true,
+      editable: false,
     },
     {
-      field: 'role',
-      headerName: 'Role',
-      type: 'singleSelect',
+      field: 'stock',
+      headerName: 'Stock',
       flex: 1,
-      editable: true,
-
-      valueOptions: [
-        { value: 'ADMIN', label: 'Admin' },
-        { value: 'USER', label: 'User' },
-      ],
-
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          color={params.value === 'ADMIN' ? 'success' : 'warning'}
-          variant="outlined"
-          size="small"
-        />
-      ),
+      editable: false,
     },
     {
       field: 'createDate',
@@ -159,8 +144,8 @@ export default function UserTable() {
       headerName: 'Actions',
       renderCell: (params) => (
         <>
-          <IconButton aria-label="edit" onClick={() => handleEditUser(params.row.id)}><ModeEditIcon/></IconButton>
-          <IconButton aria-label="delete" onClick={() => handleDeleteUser(params.row.id)}><DeleteIcon /></IconButton>
+          <IconButton aria-label="edit" onClick={() => handleEditBook(params.row.id)}><ModeEditIcon/></IconButton>
+          <IconButton aria-label="delete" onClick={() => handleDeleteBook(params.row.id)}><DeleteIcon /></IconButton>
         </>),
     }
 
@@ -171,7 +156,7 @@ export default function UserTable() {
 
         <DataGrid
           rows={rows}
-          columns={userColumns}
+          columns={bookColumns}
           loading={loading}
           editMode="cell"
           processRowUpdate={processRowUpdate}
@@ -220,19 +205,19 @@ export default function UserTable() {
             size="small"
             onClick={() => setOpenForm(true)}
           >
-            Add user
+            Add book
           </Button>
         </Box>
 
         {openForm && (
-          <UserPopupForm
+          <BookPopupForm
             open={openForm}
-            user={pickedUser}
+            book={pickedBook}
             onClose={() => {
               setOpenForm(false);
-              setPickedUser(null);
+              setPickedBook(null);
             }}
-            onSubmit={handleSubmitUser}
+            onSubmit={handleSubmitBook}
           />
         )}
         

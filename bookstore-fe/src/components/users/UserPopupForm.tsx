@@ -14,7 +14,7 @@ import type { UserDto, UserRole } from '../../dtos/users/user.dto';
 
 interface Props {
   open: boolean;
-  user?: UserDto;
+  user?: UserDto | null;
   onClose: () => void;
   onSubmit: (user: UserDto) => Promise<void>;
 }
@@ -46,12 +46,10 @@ export default function UserPopupForm({ open, user, onClose, onSubmit }: Props) 
     const USER_ROLES: UserRole[] = ['ADMIN', 'USER'];
     
     useEffect(() => {
-        if (!open) return;
-
-        if (user) {
+        if (open && user ) {
             setForm(user);
         }
-    }, [user, open]);
+    }, [open]);
 
     const handleChange = (field: keyof UserDto) => (e: React.ChangeEvent<HTMLInputElement>) => {
         setForm({ ...form, [field]: e.target.value });
@@ -72,16 +70,12 @@ export default function UserPopupForm({ open, user, onClose, onSubmit }: Props) 
         }
 
         await onSubmit(form);
-        setForm(initialForm);
-        setErrors({});
-        open = false;
-        onClose();
+        handleClose();
     };
 
     const handleClose = async () => {
         setForm(initialForm);
         setErrors({});
-        open = false;
         onClose();
     }
 

@@ -7,8 +7,9 @@ type MenuItem = {
 };
 
 const mainListItems: MenuItem[] = [
-  { text: 'User', path: '/user' },
-  { text: 'Chat Box', path: '/chat-list' },
+  { text: 'User', path: '/' },
+  { text: 'Book', path: '/books' },
+  { text: 'Order', path: '/orders' },
 ];
 
 export default function NavbarContent() {

@@ -19,7 +19,7 @@ export class Order {
     @JoinColumn({ name: 'users_id', referencedColumnName: 'id' })
     user: User;
 
-    @Column({name: 'total_price'})
+    @Column({name: 'total_price', type: 'decimal', precision: 12, scale: 2})
     totalPrice: number;
 
     @Column({

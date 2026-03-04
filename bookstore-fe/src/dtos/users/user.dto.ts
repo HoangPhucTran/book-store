@@ -6,4 +6,6 @@ export interface UserDto {
     password: string;
     name: string;
     role: UserRole;
+    updateDate?: Date;
+    createDate?: Date;
 }

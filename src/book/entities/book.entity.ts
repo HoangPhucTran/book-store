@@ -11,7 +11,7 @@ export class Book {
     @Column({name: 'author'})
     author: string;
 
-    @Column({name: 'price'})
+    @Column({name: 'price', type: 'decimal', precision: 12, scale: 2})
     price: number;
 
     @Column({name: 'stock'})

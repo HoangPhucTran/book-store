@@ -4,12 +4,13 @@ import { useEffect, useState } from 'react';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
-import { addUser, deleteUser, editUser, getUserById, getUsers } from '../../api/users/user.api';
+import { addOrder, deleteOrder, editOrder, getOrderById, getOrders } from '../../api/orders/order.api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
-import type { UserDto } from '../../dtos/users/user.dto';
-import UserPopupForm from '../../components/users/UserPopupForm';
+// import OrderPopupForm from '../../components/orders/OrderPopupForm';
 import AlertDialogForm from '../../components/common/AlertDialog';
+import type { OrderDto, OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
+import OrderPopupForm from '../../components/orders/OrderPopupForm';
 
 const SeqCell = (params: GridRenderCellParams) => {
   const apiRef = useGridApiContext();
@@ -21,11 +22,11 @@ const SeqCell = (params: GridRenderCellParams) => {
   return page * pageSize + index + 1;
 };
 
-export default function UserTable() {
+export default function OrderTable() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [openForm, setOpenForm] = useState(false);
-  const [pickedUser, setPickedUser] = useState<UserDto | null> (null);
+  const [pickedOrder, setPickedOrder] = useState<OrderRequestDto | null> (null);
   const [openAlert, setOpenAlert] = useState(false);
   const [alertContent, setAlertContent] = useState<string>("");
   const [alertTitle, setAlertTitle] = useState<string>("");
@@ -34,7 +35,7 @@ export default function UserTable() {
   useEffect(() => {
     setLoading(true);
     const onInit = () => {
-      getUsers()
+      getOrders()
       .then((res) => setRows(res.data))
       .finally(() => setLoading(false));
     }
@@ -42,9 +43,9 @@ export default function UserTable() {
     onInit();
   },[]);
 
-  const processRowUpdate = async (newRow: UserDto, oldRow: UserDto) => {
+  const processRowUpdate = async (newRow: OrderRequestDto, oldRow: OrderRequestDto) => {
     try {
-      await editUser(newRow);
+      await editOrder(newRow);
       return newRow; // ✅ commit
     } catch (error) {
       console.error(error);
@@ -52,31 +53,31 @@ export default function UserTable() {
     }
   };
 
-  const handleEditUser = async (id: string) => {
+  const handleEditOrder = async (id: string) => {
     try {
-      const user = await getUserById(id);
+      const order = await getOrderById(id);
 
-      if (!user)
+      if (!order)
         return;
 
-      setPickedUser(user);   
+      setPickedOrder(order);   
       setOpenForm(true);     
     } catch (err) {
       throw err;
     }
   };
   
-  const handleDeleteUser = async (id: string) => {
+  const handleDeleteOrder = async (id: string) => {
     try {
       setOpenAlert(true);
-      setAlertTitle("Delete User");
-      setAlertContent("Do you want to delete this user?");
+      setAlertTitle("Delete Order");
+      setAlertContent("Do you want to delete this order?");
 
       setConfirmAlert(() => async(ok: boolean) => {
         if(!ok)
           return;
 
-        await deleteUser(id);
+        await deleteOrder(id);
         setRows((prev) => prev.filter((row) => row.id !== id));
       })
 
@@ -85,22 +86,28 @@ export default function UserTable() {
     }
   };
 
-  const handleSubmitUser = async (user: UserDto) => {
+  const handleSubmitOrder = async (order: OrderRequestDto) => {
     try {
-      if(pickedUser !== null) {
-        await editUser(user);
+      if(pickedOrder !== null) {
+        await editOrder(order);
       }
       else {
-        await addUser(user);
+        await addOrder(order);
       }
-      const res = await getUsers();
+      const res = await getOrders();
       setRows(res.data);
     } catch (err) {
       throw err;
     }
   };
 
-  const userColumns: GridColDef[] = [
+  const getStatusColor = ( status: StatusType) : 'warning' | 'success' | 'error' => {
+    if (status === 'PAID') return 'success';
+    if (status === 'CANCELLED') return 'error';
+    return 'warning'; 
+  };
+
+  const orderColumns: GridColDef[] = [
     {
       field: '',
       headerName: 'SEQ',
@@ -110,57 +117,46 @@ export default function UserTable() {
       renderCell: (params) => <SeqCell {...params}/>
     },
     {
-      field: 'name',
-      headerName: 'Name',
+      field: 'user.name',
+      headerName: 'Customer Name',
       flex: 1,
       editable: true,
     },
     {
-      field: 'username',
-      headerName: 'Username',
+      field: 'totalPrice',
+      headerName: 'Total Price',
       flex: 1,
       editable: true,
     },
     {
-      field: 'password',
-      headerName: 'Password',
-      flex: 1,
-      editable: true,
-    },
-    {
-      field: 'role',
-      headerName: 'Role',
+      field: 'status',
+      headerName: 'Status',
       type: 'singleSelect',
       flex: 1,
       editable: true,
 
       valueOptions: [
-        { value: 'ADMIN', label: 'Admin' },
-        { value: 'USER', label: 'User' },
+        { value: 'PENDING', label: 'Pending' },
+        { value: 'PAID', label: 'Paid' },
+        { value: 'CANCELLED', label: 'Cancelled' },
       ],
 
       renderCell: (params) => (
         <Chip
           label={params.value}
-          color={params.value === 'ADMIN' ? 'success' : 'warning'}
+          color={getStatusColor(params.value)}
           variant="outlined"
           size="small"
         />
       ),
     },
     {
-      field: 'createDate',
-      headerName: 'Create Date',
-      flex: 1,
-      editable: false,
-    },
-    {
       field: 'actions',
       headerName: 'Actions',
       renderCell: (params) => (
         <>
-          <IconButton aria-label="edit" onClick={() => handleEditUser(params.row.id)}><ModeEditIcon/></IconButton>
-          <IconButton aria-label="delete" onClick={() => handleDeleteUser(params.row.id)}><DeleteIcon /></IconButton>
+          <IconButton aria-label="edit" onClick={() => handleEditOrder(params.row.id)}><ModeEditIcon/></IconButton>
+          <IconButton aria-label="delete" onClick={() => handleDeleteOrder(params.row.id)}><DeleteIcon /></IconButton>
         </>),
     }
 
@@ -171,7 +167,7 @@ export default function UserTable() {
 
         <DataGrid
           rows={rows}
-          columns={userColumns}
+          columns={orderColumns}
           loading={loading}
           editMode="cell"
           processRowUpdate={processRowUpdate}
@@ -220,19 +216,19 @@ export default function UserTable() {
             size="small"
             onClick={() => setOpenForm(true)}
           >
-            Add user
+            Add order
           </Button>
         </Box>
 
         {openForm && (
-          <UserPopupForm
+          <OrderPopupForm
             open={openForm}
-            user={pickedUser}
+            order={pickedOrder}
             onClose={() => {
               setOpenForm(false);
-              setPickedUser(null);
+              setPickedOrder(null);
             }}
-            onSubmit={handleSubmitUser}
+            onSubmit={handleSubmitOrder}
           />
         )}
         
