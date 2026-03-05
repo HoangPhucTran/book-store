@@ -163,7 +163,6 @@ export default function UserTable() {
           <IconButton aria-label="delete" onClick={() => handleDeleteUser(params.row.id)}><DeleteIcon /></IconButton>
         </>),
     }
-
   ];
 
   return (

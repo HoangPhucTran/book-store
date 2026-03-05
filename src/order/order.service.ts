@@ -1,35 +1,120 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Order } from './entities/order.entity';
+import { Order, StatusType } from './entities/order.entity';
 import { Repository } from 'typeorm';
 import { OrderDto } from './dtos/order.dto';
+import { OrderRequestDto } from './dtos/order.request.dto';
+import { User } from 'src/user/entities/user.entity';
+import { Book } from 'src/book/entities/book.entity';
+import { OrderItem } from './entities/order-item.entity';
+import { BookDto } from 'src/book/dtos/book.dto';
+import { OrderListResponseDto } from './dtos/orderList.response.dto';
+import { OrderDetailsResponseDto } from './dtos/orderDetails.response.dto';
+import { title } from 'process';
 
 @Injectable()
 export class OrderService {
     constructor (
         @InjectRepository(Order)
         private readonly orderRepository: Repository<Order>,
+        @InjectRepository(OrderItem)
+        private readonly orderItemRepository: Repository<OrderItem>,
+        @InjectRepository(User)
+        private readonly userRepository: Repository<User>,
+        @InjectRepository(Book)
+        private readonly bookRepository: Repository<Book>,
     ) {}
 
-    async findAll() : Promise<Order[]> {
-        return await this.orderRepository.find();
+    async findAll() : Promise<OrderListResponseDto[]> {
+        const orderList = await this.orderRepository.find();
+        let orderListRes: OrderListResponseDto[] = [];
+        for (const i of orderList) {
+            const user = await this.userRepository.findOneBy({
+                id: i.userId
+            });
+            
+            orderListRes.push({
+                id: i.id,
+                userName: user?.name,
+                status: i.orderStatus,
+                totalPrice: i.totalPrice,
+                createDate: i.createDate
+            });
+        }
+
+        return orderListRes;
     }
 
-    async findOneById(id: string) : Promise <Order | null> {
-        return await this.orderRepository.findOneBy({
-            id: id
-        });
+    async findOneById(id: string) : Promise <OrderDetailsResponseDto> {
+        try {
+            const order = await this.orderRepository.findOne({
+                where: { id },
+                relations: ['user'],
+            });
+
+            if (!order)
+                throw new NotFoundException('Order not found');
+
+            const orderItems = await this.orderItemRepository.find({
+                where: { orderId: order.id },
+                relations: ['book'],
+            });
+
+            const orderDetails: OrderDetailsResponseDto = {
+                userId: order.userId,
+                name: order.user.name,
+                status: order.orderStatus,
+                totalPrice: order.totalPrice,
+                item: orderItems.map(i => {
+                    return {
+                        bookId: i.bookId,
+                        title: i.book.title,
+                        quantity: i.quantity,
+                        stock: i.book.stock,
+                        price: i.price
+                    }
+                })
+            };
+
+            return orderDetails;
+        } catch (er) {
+            throw new Error('Edit order failed: ' + er.message);
+        }
+       
     }
 
-    async add(orderDto: OrderDto): Promise<Order> {
+    async add(orderDto: OrderRequestDto): Promise<Order> {
         try {
             const order = this.orderRepository.create({
                 userId: orderDto.userId,
                 totalPrice: orderDto.totalPrice,
-                orderStatus: orderDto.orderStatus
+                orderStatus: orderDto.status
             });
-
             const saveOrder = await this.orderRepository.save(order);
+
+            const orderItems = orderDto.item.map(i =>
+                this.orderItemRepository.create({
+                    orderId: saveOrder.id,
+                    bookId: i.bookId,
+                    quantity: i.quantity,
+                    price: i.price
+                })
+            );
+
+            await this.orderItemRepository.save(orderItems);
+
+            for (const i of orderDto.item) {
+                const book = await this.bookRepository.findOne({
+                    where: { id: i.bookId }
+                });
+
+                if (!book) throw new Error("Book not found");
+
+                await this.bookRepository.update(
+                    { id: i.bookId },
+                    { stock: book.stock - i.quantity }
+                );
+            }
 
             return saveOrder;
         } catch (er) {
@@ -37,7 +122,7 @@ export class OrderService {
         }
     }
 
-    async edit(id: string, orderDto: OrderDto): Promise<Order> {
+    async edit(id: string, orderDto: OrderRequestDto): Promise<Order> {
         try {
             const order = await this.findOneById(id);
 

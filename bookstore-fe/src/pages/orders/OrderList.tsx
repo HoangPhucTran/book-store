@@ -9,8 +9,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
 // import OrderPopupForm from '../../components/orders/OrderPopupForm';
 import AlertDialogForm from '../../components/common/AlertDialog';
-import type { OrderDto, OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
+import type {OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
 import OrderPopupForm from '../../components/orders/OrderPopupForm';
+import OrderDetailsPopupForm from '../../components/orders/OrderDetailsForm';
 
 const SeqCell = (params: GridRenderCellParams) => {
   const apiRef = useGridApiContext();
@@ -26,6 +27,7 @@ export default function OrderTable() {
   const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [openForm, setOpenForm] = useState(false);
+  const [openDetailsForm, setOpenDetailsForm] = useState(false);
   const [pickedOrder, setPickedOrder] = useState<OrderRequestDto | null> (null);
   const [openAlert, setOpenAlert] = useState(false);
   const [alertContent, setAlertContent] = useState<string>("");
@@ -61,7 +63,7 @@ export default function OrderTable() {
         return;
 
       setPickedOrder(order);   
-      setOpenForm(true);     
+      setOpenDetailsForm(true);     
     } catch (err) {
       throw err;
     }
@@ -117,7 +119,7 @@ export default function OrderTable() {
       renderCell: (params) => <SeqCell {...params}/>
     },
     {
-      field: 'user.name',
+      field: 'userName',
       headerName: 'Customer Name',
       flex: 1,
       editable: true,
@@ -149,6 +151,12 @@ export default function OrderTable() {
           size="small"
         />
       ),
+    },
+    {
+      field: 'createDate',
+      headerName: 'Create Date',
+      flex: 1,
+      editable: true,
     },
     {
       field: 'actions',
@@ -220,13 +228,23 @@ export default function OrderTable() {
           </Button>
         </Box>
 
+        {openDetailsForm && (
+          <OrderDetailsPopupForm
+            open={openDetailsForm}
+            order={pickedOrder}
+            onClose={() => {
+              setOpenDetailsForm(false);
+              setPickedOrder(null);
+            }}
+            onSubmit={handleSubmitOrder}
+          />
+        )}
+
         {openForm && (
           <OrderPopupForm
             open={openForm}
-            order={pickedOrder}
             onClose={() => {
               setOpenForm(false);
-              setPickedOrder(null);
             }}
             onSubmit={handleSubmitOrder}
           />
