@@ -40,7 +40,7 @@ import { AuthModule } from './auth/auth.module';
       useFactory: async () => ({
         stores: [
           createKeyv({
-            url: 'redis://localhost:6379',
+            url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`,
             socket: {
               connectTimeout: 2000,
               reconnectStrategy: () => false,

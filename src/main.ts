@@ -34,11 +34,8 @@ async function bootstrap() {
     console.log('Redis server not avaiable, skip flush');
   }
 
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('PORT') ?? 3123;
+  console.log('PORT FROM CONFIG =', process.env.PORT);
 
-  console.log('PORT FROM CONFIG =', port);
-
-  await app.listen(port);
+  await app.listen(process.env.PORT || 3123 );
 }
 bootstrap();
