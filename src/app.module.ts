@@ -12,6 +12,7 @@ import { createKeyv } from '@keyv/redis';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { CacheInterceptor } from '@nestjs/cache-manager';
 import { NatsClientModule } from './nats-client/nats-client.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -52,13 +53,14 @@ import { NatsClientModule } from './nats-client/nats-client.module';
     OrderModule,
     BookModule,
     NatsClientModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService,
     {
       provide: APP_INTERCEPTOR,
       useClass: CacheInterceptor,
-    }
+    },
   ],
 })
 
