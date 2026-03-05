@@ -21,6 +21,6 @@ export class OrderItem {
     @JoinColumn({ name: 'book_id', referencedColumnName: 'id' })
     book: Book;
 
-    @Column({name: 'price'})
+    @Column({name: 'price', type: 'decimal', precision: 12, scale: 2})
     price: number;
 }

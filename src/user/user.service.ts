@@ -37,7 +37,6 @@ export class UserService {
             });
 
             const saveUser = await this.userRepository.save(user);
-
             return saveUser;
         } catch (er) {
             throw new Error('Create user failed: ' + er.message);
@@ -51,10 +50,12 @@ export class UserService {
             if (!user)
                 throw new NotFoundException('User not found');
 
-            Object.assign(user, userDto);
+            user.username = userDto.username;
+            user.password = userDto.password;
+            user.name = userDto.name;
+            user.role = userDto.role;
 
             const saveUser = await this.userRepository.save(user);
-
             return saveUser;
         } catch (er) {
             throw new Error('Edit user failed: ' + er.message);
@@ -63,6 +64,11 @@ export class UserService {
 
     async delete(id: string) : Promise<void> {
         try {
+            const user = await this.findOneById(id);
+
+            if (!user)
+                throw new NotFoundException('User not found');
+            
             await this.userRepository.delete(id);
         } catch (error) {
             throw new Error('Delete user failed: ' + error.message);
