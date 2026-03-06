@@ -153,6 +153,11 @@ export default function UserTable() {
       headerName: 'Create Date',
       flex: 1,
       editable: false,
+      type: 'dateTime',
+      valueFormatter: (value) => {
+        const date = new Date(value);
+        return date.toLocaleString('vi-VN');
+      },
     },
     {
       field: 'actions',

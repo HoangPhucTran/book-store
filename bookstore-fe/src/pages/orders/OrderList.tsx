@@ -159,7 +159,12 @@ export default function OrderTable() {
       field: 'createDate',
       headerName: 'Create Date',
       flex: 1,
-      editable: true,
+      type: 'dateTime',
+      valueFormatter: (value) => {
+        const date = new Date(value);
+        return date.toLocaleString('vi-VN');
+      },
+      editable: false,
     },
     {
       field: 'actions',
