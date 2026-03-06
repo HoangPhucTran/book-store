@@ -1,16 +1,16 @@
-import { IsEnum, IsNumber, IsString } from "class-validator";
-import { StatusType } from "../entities/order.entity";
+import { IsEnum, IsNumber, IsString } from 'class-validator';
+import { StatusType } from '../entities/order.entity';
 
 export class OrderDto {
-    @IsString()
-    id?: string;
+  @IsString()
+  id?: string;
 
-    @IsString()
-    userId: string;
+  @IsString()
+  userId: string;
 
-    @IsNumber()
-    totalPrice: number;
+  @IsNumber()
+  totalPrice: number;
 
-    @IsEnum(StatusType)
-    orderStatus: StatusType;
+  @IsEnum(StatusType)
+  orderStatus: StatusType;
 }

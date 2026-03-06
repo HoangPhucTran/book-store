@@ -1,18 +1,18 @@
-import { IsNumber, IsString } from "class-validator";
+import { IsNumber, IsString } from 'class-validator';
 
 export class BookDto {
-    @IsString()
-    id?: string;
+  @IsString()
+  id?: string;
 
-    @IsString()
-    title: string;
+  @IsString()
+  title: string;
 
-    @IsString()
-    author: string;
+  @IsString()
+  author: string;
 
-    @IsNumber()
-    price: number;
+  @IsNumber()
+  price: number;
 
-    @IsNumber()
-    stock: number;
+  @IsNumber()
+  stock: number;
 }

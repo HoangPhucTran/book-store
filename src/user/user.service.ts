@@ -6,72 +6,70 @@ import { UserDto } from './dtos/user.dto';
 
 @Injectable()
 export class UserService {
-    constructor (
-        @InjectRepository(User)
-        private readonly userRepository: Repository<User>,
-    ) {}
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
-    async findAll() : Promise<User[]> {
-        return await this.userRepository.find();
+  async findAll(): Promise<User[]> {
+    return await this.userRepository.find();
+  }
+
+  async findByUsername(username: string): Promise<User | null> {
+    return await this.userRepository.findOneBy({
+      username: username,
+    });
+  }
+
+  async findOneById(id: string): Promise<User | null> {
+    return await this.userRepository.findOneBy({
+      id: id,
+    });
+  }
+
+  async add(userDto: UserDto): Promise<User> {
+    try {
+      const user = this.userRepository.create({
+        username: userDto.username,
+        password: userDto.password,
+        name: userDto.name,
+        role: userDto.role,
+      });
+
+      const saveUser = await this.userRepository.save(user);
+      return saveUser;
+    } catch (er) {
+      throw new Error('Create user failed: ' + er.message);
     }
+  }
 
-    async findByUsername(username: string) : Promise<User | null> {
-        return await this.userRepository.findOneBy({
-            username: username
-        });
+  async edit(id: string, userDto: UserDto): Promise<User> {
+    try {
+      const user = await this.findOneById(id);
+
+      if (!user) throw new NotFoundException('User not found');
+
+      user.username = userDto.username;
+      user.password = userDto.password;
+      user.name = userDto.name;
+      user.role = userDto.role;
+
+      const saveUser = await this.userRepository.save(user);
+      return saveUser;
+    } catch (er) {
+      throw new Error('Edit user failed: ' + er.message);
     }
+  }
 
-    async findOneById(id: string) : Promise <User | null> {
-        return await this.userRepository.findOneBy({
-            id: id
-        });
+  async delete(id: string): Promise<void> {
+    try {
+      const user = await this.findOneById(id);
+
+      if (!user) throw new NotFoundException('User not found');
+
+      await this.userRepository.delete(id);
+    } catch (error) {
+      throw new Error('Delete user failed: ' + error.message);
     }
-
-    async add(userDto: UserDto): Promise<User> {
-        try {
-            const user = this.userRepository.create({
-                username: userDto.username,
-                password: userDto.password,
-                name: userDto.name,
-                role: userDto.role
-            });
-
-            const saveUser = await this.userRepository.save(user);
-            return saveUser;
-        } catch (er) {
-            throw new Error('Create user failed: ' + er.message);
-        }
-    }
-
-    async edit(id: string, userDto: UserDto): Promise<User> {
-        try {
-            const user = await this.findOneById(id);
-
-            if (!user)
-                throw new NotFoundException('User not found');
-
-            user.username = userDto.username;
-            user.password = userDto.password;
-            user.name = userDto.name;
-            user.role = userDto.role;
-
-            const saveUser = await this.userRepository.save(user);
-            return saveUser;
-        } catch (er) {
-            throw new Error('Edit user failed: ' + er.message);
-        }
-    }
-
-    async delete(id: string) : Promise<void> {
-        try {
-            const user = await this.findOneById(id);
-
-            if (!user)
-                throw new NotFoundException('User not found');
-            
-            await this.userRepository.delete(id);
-        } catch (error) {
-            throw new Error('Delete user failed: ' + error.message);
-        }
-    }
+  }
 }

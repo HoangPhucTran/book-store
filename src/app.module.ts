@@ -18,10 +18,7 @@ import { AuthModule } from './auth/auth.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: [
-        `.env.${process.env.NODE_ENV || 'development'}`,
-        '.env',
-      ],
+      envFilePath: [`.env.${process.env.NODE_ENV || 'development'}`, '.env'],
     }),
 
     TypeOrmModule.forRoot({
@@ -59,14 +56,14 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService,
+  providers: [
+    AppService,
     {
       provide: APP_INTERCEPTOR,
       useClass: CacheInterceptor,
     },
   ],
 })
-
 export class AppModule {
   constructor(private readonly dataSource: DataSource) {
     console.log('DB connected', dataSource.isInitialized);
