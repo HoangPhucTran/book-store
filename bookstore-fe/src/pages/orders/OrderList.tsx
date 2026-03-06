@@ -9,7 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
 // import OrderPopupForm from '../../components/orders/OrderPopupForm';
 import AlertDialogForm from '../../components/common/AlertDialog';
-import type {OrderDetailsResponseDto, OrderEditRequestDto, OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
+import type {OrderDetailsResponseDto, OrderEditRequestDto, OrderListResponseDto, OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
 import OrderPopupForm from '../../components/orders/OrderPopupForm';
 import OrderDetailsPopupForm from '../../components/orders/OrderDetailsForm';
 
@@ -44,6 +44,20 @@ export default function OrderTable() {
 
     onInit();
   },[]);
+
+  const processRowUpdate = async (newRow: OrderListResponseDto, oldRow: OrderListResponseDto) => {
+    try {
+      const editRow: OrderEditRequestDto = {
+        id: newRow.id,
+        status: newRow.status,
+      }
+      await editOrder(newRow);
+      return newRow; // ✅ commit
+    } catch (error) {
+      console.error(error);
+      return oldRow; // ✅ rollback
+    }
+  };
 
   const handleEditOrder = async (id: string) => {
     try {
@@ -113,13 +127,13 @@ export default function OrderTable() {
       field: 'userName',
       headerName: 'Customer Name',
       flex: 1,
-      editable: true,
+      editable: false,
     },
     {
       field: 'totalPrice',
       headerName: 'Total Price',
       flex: 1,
-      editable: true,
+      editable: false,
     },
     {
       field: 'status',
@@ -147,15 +161,20 @@ export default function OrderTable() {
       field: 'createDate',
       headerName: 'Create Date',
       flex: 1,
-      editable: true,
+      type: 'dateTime',
+      valueFormatter: (value) => {
+        const date = new Date(value);
+        return date.toLocaleString('vi-VN');
+      },
+      editable: false,
     },
     {
       field: 'actions',
       headerName: 'Actions',
       renderCell: (params) => (
         <>
-          <IconButton aria-label="edit" onClick={() => handleEditOrder(params.row.id)}><ModeEditIcon/></IconButton>
-          <IconButton aria-label="delete" onClick={() => handleDeleteOrder(params.row.id)}><DeleteIcon /></IconButton>
+          <IconButton disableRipple aria-label="edit" onClick={() => handleEditOrder(params.row.id)}><ModeEditIcon/></IconButton>
+          <IconButton disableRipple aria-label="delete" onClick={() => handleDeleteOrder(params.row.id)}><DeleteIcon /></IconButton>
         </>),
     }
 
@@ -167,6 +186,7 @@ export default function OrderTable() {
         <DataGrid
           rows={rows}
           columns={orderColumns}
+          processRowUpdate={processRowUpdate}
           loading={loading}
           editMode="cell"
           pageSizeOptions={[10]}

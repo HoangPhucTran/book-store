@@ -2,8 +2,6 @@ import { DataGrid, useGridApiContext } from '@mui/x-data-grid';
 import { Box, Button, Chip, IconButton } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import { addUser, deleteUser, editUser, getUserById, getUsers } from '../../api/users/user.api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
@@ -45,10 +43,10 @@ export default function UserTable() {
   const processRowUpdate = async (newRow: UserDto, oldRow: UserDto) => {
     try {
       await editUser(newRow);
-      return newRow; // ?œ… commit
+      return newRow; // ?ï¿½ï¿½ commit
     } catch (error) {
       console.error(error);
-      return oldRow; // ?œ… rollback
+      return oldRow; // ?ï¿½ï¿½ rollback
     }
   };
 
@@ -122,12 +120,6 @@ export default function UserTable() {
       editable: true,
     },
     {
-      field: 'password',
-      headerName: 'Password',
-      flex: 1,
-      editable: true,
-    },
-    {
       field: 'role',
       headerName: 'Role',
       type: 'singleSelect',
@@ -153,6 +145,11 @@ export default function UserTable() {
       headerName: 'Create Date',
       flex: 1,
       editable: false,
+      type: 'dateTime',
+      valueFormatter: (value) => {
+        const date = new Date(value);
+        return date.toLocaleString('vi-VN');
+      },
     },
     {
       field: 'actions',

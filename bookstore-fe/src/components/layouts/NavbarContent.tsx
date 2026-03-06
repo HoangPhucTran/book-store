@@ -7,7 +7,7 @@ type MenuItem = {
 };
 
 const mainListItems: MenuItem[] = [
-  { text: 'User', path: '/' },
+  { text: 'User', path: '/users' },
   { text: 'Book', path: '/books' },
   { text: 'Order', path: '/orders' },
 ];
