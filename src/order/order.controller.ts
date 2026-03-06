@@ -16,10 +16,13 @@ import { OrderListResponseDto } from './dtos/orderList.response.dto';
 import { OrderDetailsResponseDto } from './dtos/orderDetails.response.dto';
 import { UseInterceptors } from '@nestjs/common';
 import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager';
+import { UseGuards } from '@nestjs/common';
+import { AuthenticationGuard } from '../auth/guards/auth.guard';
 @Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
+  @UseGuards(AuthenticationGuard)
   @UseInterceptors(CacheInterceptor)
   @CacheKey('orders')
   @Get()
