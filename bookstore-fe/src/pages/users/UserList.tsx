@@ -45,10 +45,10 @@ export default function UserTable() {
   const processRowUpdate = async (newRow: UserDto, oldRow: UserDto) => {
     try {
       await editUser(newRow);
-      return newRow; // âœ… commit
+      return newRow; // ?œ… commit
     } catch (error) {
       console.error(error);
-      return oldRow; // âœ… rollback
+      return oldRow; // ?œ… rollback
     }
   };
 
@@ -163,7 +163,6 @@ export default function UserTable() {
           <IconButton aria-label="delete" onClick={() => handleDeleteUser(params.row.id)}><DeleteIcon /></IconButton>
         </>),
     }
-
   ];
 
   return (
@@ -190,30 +189,7 @@ export default function UserTable() {
             mt: 2,
           }}
         >
-          <Box sx={{mr: 'auto'}}>
-            <Button
-            variant="contained"
-            component="label"
-            startIcon={<CloudUploadIcon />}
-            >
-              Upload CSV
-              <input
-                type="file"
-                accept=".csv"
-                hidden
-              />
-            </Button>
-
-            <Button
-            variant="outlined"
-            component='a'
-            sx={{ ml: 1 }}
-            download
-            startIcon={<CloudDownloadIcon />}
-            >
-              Download CSV Template
-            </Button>
-          </Box>
+          
           
           <Button
             variant="contained"

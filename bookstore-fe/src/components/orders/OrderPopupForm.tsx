@@ -13,14 +13,17 @@ import {
   TableCell,
   TableBody,
   Paper,
+  TextField,
+  MenuItem,
 } from '@mui/material';
 import {useEffect, useState } from 'react';
-import type { OrderDto, OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
-import { DataGrid, useGridApiContext, type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid';
+import type { OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
+import { DataGrid, useGridApiContext, type GridColDef, type GridRenderCellParams, type GridRowParams } from '@mui/x-data-grid';
 import type { UserDto } from '../../dtos/users/user.dto';
 import type { BookDto } from '../../dtos/books/book.dto';
 import { getUsers } from '../../api/users/user.api';
 import { getBooks } from '../../api/books/book.api';
+import CustomFooter from '../common/CustomFooter';
 
 interface Props {
   open: boolean;
@@ -31,35 +34,68 @@ interface Props {
 
 const initialForm: OrderRequestDto = {
     userId: '',
-    bookId: [],
-    quantity: null,
-    status: 'PENDING'
+    status: 'PENDING',
+    item: [
+        {
+            bookId: '',
+            quantity: null,
+            price: null
+        },
+    ],
+    totalPrice: null
 }
 
 const STATUS_TYPE: StatusType[] = ['PENDING', 'PAID', 'CANCELLED'];
 
-type FormErrors = Partial<Record<keyof OrderRequestDto, string>>;
+type FormErrors = {
+    userId?: string,
+    status?: string,
+    item?: {
+        bookId?: string,
+        quantity?: string
+    }[],
+};
 
 const validate = (data: OrderRequestDto): FormErrors => {
     const errs: FormErrors = {};
 
-    if (data.userId === null || data.userId === undefined) 
+    if (data.userId === null || data.userId === undefined || data.userId.trim() === '') 
         errs.userId = 'Buyer is required';
 
     if ( 
-        !Array.isArray(data.bookId) || 
-        data.bookId.length === 0 || 
-        data.bookId.some(id => !id || !id.trim()) 
-    ) {
-        errs.bookId = 'Book is required';
+        !Array.isArray(data.item) || 
+        data.item.length === 0    ) {
+        errs.item = [{bookId: 'Book is required'}];
+
+        return errs;
     }
 
-    if (data.quantity === null || data.quantity === undefined) 
-        errs.quantity = 'Quantity is required';
-    else if (!Number.isInteger(data.quantity) || data.quantity < 0) 
-        errs.quantity = 'Quantity have to be integer and greater or equal 0';
+    const itemErrors: FormErrors["item"] = [];
 
-    if (!STATUS_TYPE.includes(data.status as StatusType)) errs.status = 'Status is invalid';
+    data.item.forEach((item, index) => {
+        const itemErr: { bookId?: string; quantity?: string } = {};
+
+        if (!item.bookId || !item.bookId.trim()) {
+            itemErr.bookId = "Book is required";
+        }
+
+        if (item.quantity === null || item.quantity === undefined) {
+            itemErr.quantity = "Quantity is required";
+        } 
+        else if (!Number.isInteger(item.quantity) || item.quantity <= 0) {
+            itemErr.quantity = "Quantity must be integer > 0";
+        }
+
+        itemErrors[index] = itemErr;
+    });
+
+    if (itemErrors.some(e => Object.keys(e).length > 0)) {
+        errs.item = itemErrors;
+    }
+
+    if (!STATUS_TYPE.includes(data.status as StatusType) ) errs.status = 'Status is invalid';
+
+    console.log('Check Error', errs);
 
     return errs;
 };
@@ -68,7 +104,7 @@ interface BillItem {
   bookId: string;
   title: string;
   price: number ;
-  quantity: number; // >= 1
+  quantity: number; 
 }
 
 export default function OrderPopupForm({ open, order, onClose, onSubmit }: Props) {
@@ -84,12 +120,7 @@ export default function OrderPopupForm({ open, order, onClose, onSubmit }: Props
         if (!open)
             return;
 
-        if ( order ) {
-            setForm({
-                ...order,
-                quantity: order.quantity  ? Number(order.quantity) : null,
-            });
-        } 
+        console.log("Form change", billItems);
 
         setUserLoading(true);
         setBookLoading(true);
@@ -106,21 +137,39 @@ export default function OrderPopupForm({ open, order, onClose, onSubmit }: Props
         onInit();
     }, [open, order]);
 
-    const handleChange = (field: keyof OrderRequestDto) => (e: React.ChangeEvent<HTMLInputElement>) => {
-        let value: any = e.target.value;
-        
-        if (field === 'quantity' ) {
-            const n = e.target.valueAsNumber;
-            value = Number.isNaN(n) ? null : n;
-        }
-        
-        setForm({ ...form, [field]: value });
+    const handleQuantityChange = (bookId: string, index: number) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = Number(e.target.value);
 
-        setErrors((prev) => {
-            const copy = { ...prev };
-            delete copy[field]; 
-            return copy;
-        });
+        const newBillItems = billItems.map(b =>
+            b.bookId === bookId ? { ...b, quantity: value } : b
+        );
+
+        setBillItems(newBillItems);
+
+        const newForm = {
+            ...form,
+            totalPrice: totalPrice,
+            item: newBillItems.map(b => ({
+                bookId: b.bookId,
+                quantity: b.quantity,
+                price: b.price
+            }))
+        };
+
+        setForm(newForm);
+
+        setErrors(validate(newForm));
+    };
+
+    const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newForm = {
+            ...form,
+            status: e.target.value as StatusType
+        };
+
+        setForm(newForm);
+        setErrors(validate(newForm));
     };
 
     const handleSubmit = async () => {
@@ -141,8 +190,13 @@ export default function OrderPopupForm({ open, order, onClose, onSubmit }: Props
         onClose();
     }
 
-    const invoiceSubtotal = billItems.reduce(
+    const totalPrice = billItems.reduce(
         (sum, i) => sum + i.quantity * i.price,
+        0
+    );
+
+    const totalItem = billItems.reduce(
+        (sum, i) => sum + i.quantity,
         0
     );
 
@@ -171,13 +225,21 @@ export default function OrderPopupForm({ open, order, onClose, onSubmit }: Props
                         onRowSelectionModelChange={(model) => {
                             const firstId = model.ids.values().next().value as string | undefined;
 
-                            setForm(prev => ({
-                            ...prev,
-                            userId: firstId ?? '',
-                            }));
+                            const newForm = {
+                                ...form,
+                                userId: firstId ?? '',
+                            };
+
+                            setForm(newForm);
+                            setErrors(validate(newForm)); 
                         }}
                         sx={{ border: 0 }}
+                        
+                        slots={{
+                            footer: () => <CustomFooter error={errors.userId}/>
+                        }}
                     />
+
                 </Grid>
                 <Grid size={{xs: 6}} >
                     <DataGrid
@@ -185,43 +247,63 @@ export default function OrderPopupForm({ open, order, onClose, onSubmit }: Props
                         rows={bookRows}
                         loading={bookLoading}
                         columns={bookColumns}
+                        isRowSelectable={(params: GridRowParams) => params.row.stock > 0}
                         initialState={{
                             pagination: {
                             paginationModel: { pageSize: 5, page: 0 },
                             },
                         }}
                         checkboxSelection
+                        rowSelectionModel={
+                            {
+                                type: 'include',
+                                ids: new Set(billItems.map(b => b.bookId))
+                            }
+                        }
                         onRowSelectionModelChange={(model) => {
                             const selectedIds = Array.from(model.ids) as string[];
 
                             setBillItems(prev => {
-                            const next = [...prev];
 
-                            selectedIds.forEach(id => {
-                                if (!next.some(item => item.bookId === id)) {
-                                    const book = bookRows.find(b => b.id === id);
-                                    if (!book || !book.id || !book.price) return prev;
+                                const next = prev.filter(item => selectedIds.includes(item.bookId));
 
-                                    if (book) {
-                                        next.push({
-                                            bookId: book.id,
-                                            title: book.title,
-                                            price: book.price,
-                                            quantity: 1,
-                                        });
+                                selectedIds.forEach(id => {
+                                    if (!next.some(item => item.bookId === id)) {
+                                        const book = bookRows.find(b => b.id === id);
+                                        if (!book || !book.id || !book.price) 
+                                            return;
+
+                                        if (book) {
+                                            next.push({
+                                                bookId: book.id,
+                                                title: book.title,
+                                                price: book.price,
+                                                quantity: 1,
+                                            });
+                                        }
                                     }
-                                }
-                            });
+                                });
 
-                            return next;
-                            });
+                                const newForm = {
+                                    ...form,
+                                    item: next.map(b => ({
+                                        bookId: b.bookId,
+                                        quantity: b.quantity,
+                                        price: b.price
+                                    }))
+                                };
 
-                            setForm(prev => ({
-                            ...prev,
-                            bookId: selectedIds,
-                            }));
+                                setForm(newForm);
+                                setErrors(validate(newForm)); 
+
+                                return next;
+                            });
                         }}
                         sx={{ border: 0 }}
+
+                        slots={{
+                            footer: () => <CustomFooter error={errors.item?.find(e => e.bookId)?.bookId}/>
+                        }}
                     />
                 </Grid>
 
@@ -244,54 +326,57 @@ export default function OrderPopupForm({ open, order, onClose, onSubmit }: Props
                                 </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                {billItems.map((item) => (
+                                {billItems.map((item, index) => (
                                     <TableRow key={item.bookId}>
                                     <TableCell>{item.title}</TableCell>
-                                    <TableCell align="right">{item.quantity}</TableCell>
+                                    <TableCell align="right">
+                                        <TextField
+                                            required
+                                            sx={{width: 200, textAlign: 'center'}}
+                                            type='number'
+                                            value={item.quantity}
+                                            onChange={handleQuantityChange(item.bookId, index)}
+                                            error={!!errors.item?.[index]?.quantity}
+                                            helperText={errors.item?.[index]?.quantity}
+                                            fullWidth
+                                        />
+                                    </TableCell>
                                     <TableCell align="right">{item.price}</TableCell>
                                     <TableCell align="right">{ccyFormat(item.price * item.quantity)}</TableCell>
                                     </TableRow>
                                 ))}
                                 <TableRow>
-                                    <TableCell rowSpan={2} />
+                                    <TableCell rowSpan={3} />
                                     <TableCell colSpan={2}>Total Items</TableCell>
-                                    <TableCell align="right">{ccyFormat(invoiceSubtotal)}</TableCell>
+                                    <TableCell align="right">{ccyFormat(totalItem)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell colSpan={2}>Total</TableCell>
-                                    <TableCell align="right">{`${ccyFormat(5)} $`}</TableCell>
+                                    <TableCell align="right">{`${ccyFormat(totalPrice)} $`}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell colSpan={2}>Order Status</TableCell>
+                                    <TableCell align="right">
+                                        <TextField
+                                        select
+                                        required
+                                        sx={{ width: 200 }}
+                                        value={form.status}
+                                        onChange={handleStatusChange}
+                                        error={!!errors.status}
+                                        helperText={errors.status}
+                                    >
+                                        {STATUS_TYPE.map((status) => (
+                                            <MenuItem key={status} value={status}>
+                                                {status}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                    </TableCell>
                                 </TableRow>
                                 </TableBody>
                             </Table>
                         </TableContainer>
-
-                        
-                        {/* <TextField
-                            required
-                            type='number'
-                            label="Total Price"
-                            value={form.totalPrice}
-                            onChange={handleChange('totalPrice')}
-                            error={!!errors.totalPrice}
-                            helperText={errors.totalPrice}
-                            fullWidth
-                        />
-                        <TextField
-                            select
-                            required
-                            label="Status"
-                            value={form.status}
-                            onChange={handleChange('status')}
-                            error={!!errors.status}
-                            helperText={errors.status}
-                            fullWidth
-                        > 
-                            {STATUS_TYPE.map((status) => (
-                                <MenuItem key={status} value={status}>
-                                {status}
-                                </MenuItem>
-                            ))}
-                        </TextField> */}
                     </Stack>
                 </Grid>
             </Grid>
@@ -372,4 +457,3 @@ const userColumns: GridColDef[] = [
 function ccyFormat(num: number) {
   return `${num.toFixed(2)}`;
 }
-

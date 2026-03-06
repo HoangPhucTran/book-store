@@ -13,7 +13,36 @@ export interface OrderDto {
 export interface OrderRequestDto {
     id?: string;
     userId: string;
-    bookId: string[];
-    quantity: number | null;
     status: StatusType;
+    totalPrice: number | null;
+    item: {
+        bookId: string,
+        quantity: number | null,
+        price: number | null
+    }[];
+}
+
+export interface OrderEditRequestDto {
+    id: string;
+    status: StatusType;
+    totalPrice: number | null;
+    item: {
+        bookId: string,
+        quantity: number | null,
+    }[];
+}
+
+export interface OrderDetailsResponseDto {
+    id: string;
+    userId: string;
+    name: string;
+    status: StatusType;
+    totalPrice: number;
+    item: {
+        bookId: string,
+        title: string,
+        quantity: number,
+        price: number,
+        stock: number,
+    }[];
 }

@@ -23,4 +23,7 @@ export class OrderItem {
 
     @Column({name: 'price', type: 'decimal', precision: 12, scale: 2})
     price: number;
+
+    @Column({name: 'quantity', type: 'smallint'})
+    quantity: number;
 }

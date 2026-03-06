@@ -1,4 +1,4 @@
-import type { OrderDto, OrderRequestDto } from "../../dtos/orders/order.dto";
+import type { OrderDto, OrderEditRequestDto, OrderRequestDto } from "../../dtos/orders/order.dto";
 import api from "../axios";
 
 export async function getOrders() {
@@ -14,10 +14,10 @@ export async function addOrder(order: OrderRequestDto) {
     return api.post('/orders', order);
 }
 
-export async function editOrder(order: OrderRequestDto) {
+export async function editOrder(order: OrderEditRequestDto) {
     const {id, ...payload} = order;
 
-    return api.put(`/orders/${id}`, payload);
+    return api.patch(`/orders/${id}`, payload);
 }
 
 export async function deleteOrder(id: string) {
