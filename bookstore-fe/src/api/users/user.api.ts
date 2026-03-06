@@ -1,4 +1,5 @@
 import type { UserDto } from "../../dtos/users/user.dto";
+import { getToken } from "../auth";
 import api from "../axios";
 
 export async function getUsers() {
@@ -7,6 +8,18 @@ export async function getUsers() {
 
 export async function getUserById(id: string) {
     const reponse = await api.get(`/users/${id}`);
+    return reponse.data;
+}
+
+export async function getMe() {
+    const token = getToken();
+
+    const reponse = await api.get('/users/me', {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    
     return reponse.data;
 }
 

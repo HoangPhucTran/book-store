@@ -25,7 +25,8 @@ export class AuthService {
   }
 
   async comparePass(password: string, storedPass: string): Promise<any> {
-    return await bcrypt.compare(password, storedPass);
+    // return await bcrypt.compare(password, storedPass);
+    return password == storedPass;
   }
 
   async authentication(username: string, password: string): Promise<any> {

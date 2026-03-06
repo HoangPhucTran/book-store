@@ -13,8 +13,6 @@ import {
 } from '@mui/material';
 import {useEffect, useState } from 'react';
 import type { UserDto, UserRole } from '../../dtos/users/user.dto';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 interface Props {
   open: boolean;
