@@ -7,10 +7,14 @@ import {
   TextField,
   Stack,
   Box,
-  MenuItem
+  MenuItem,
+  InputAdornment,
+  IconButton
 } from '@mui/material';
 import {useEffect, useState } from 'react';
 import type { UserDto, UserRole } from '../../dtos/users/user.dto';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 interface Props {
   open: boolean;
@@ -42,6 +46,7 @@ const validate = (data: UserDto): FormErrors => {
 
 export default function UserPopupForm({ open, user, onClose, onSubmit }: Props) {
     const [errors, setErrors] = useState<FormErrors>({});
+    const [showPassword, setShowPassword] = useState<boolean>(false);
     const [form, setForm] = useState<UserDto>(initialForm);
     const USER_ROLES: UserRole[] = ['ADMIN', 'USER'];
     
@@ -108,11 +113,22 @@ export default function UserPopupForm({ open, user, onClose, onSubmit }: Props) 
             <TextField
                 required
                 label="Password"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={form.password}
                 onChange={handleChange('password')}
                 error={!!errors.password}
                 helperText={errors.password}
+                slotProps={{
+                    input: {
+                        endAdornment: (
+                        <InputAdornment position='end'>
+                            <IconButton disableRipple onClick={() => setShowPassword(!showPassword)}>
+                                {/* {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />} */}
+                            </IconButton>
+                        </InputAdornment>
+                        ),
+                    }
+                }}
                 fullWidth
             />
             <TextField

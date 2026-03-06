@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common'
 import { UserService } from './user.service';
 import { UserDto } from './dtos/user.dto';
 import { User } from './entities/user.entity';
+import { UserListDto } from './dtos/user-list.dto';
 
 @Controller('users')
 export class UserController {
@@ -10,7 +11,7 @@ export class UserController {
     ) {}
 
     @Get()
-    async getUsers() : Promise <User[]> {
+    async getUsers() : Promise <UserListDto[]> {
         return this.userService.findAll();
     }
 

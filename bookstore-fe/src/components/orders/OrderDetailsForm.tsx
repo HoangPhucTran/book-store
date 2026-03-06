@@ -240,6 +240,11 @@ export default function OrderDetailsPopupForm({
                     ))}
 
                     <TableRow>
+                      <TableCell colSpan={4}>Customer</TableCell>
+                      <TableCell align="right">{orderDetails?.name}</TableCell>
+                    </TableRow>
+                    
+                    <TableRow>
                       <TableCell colSpan={4}>Total Items</TableCell>
                       <TableCell align="right">{totalItem}</TableCell>
                     </TableRow>

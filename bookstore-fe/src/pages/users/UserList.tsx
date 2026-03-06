@@ -120,12 +120,6 @@ export default function UserTable() {
       editable: true,
     },
     {
-      field: 'password',
-      headerName: 'Password',
-      flex: 1,
-      editable: true,
-    },
-    {
       field: 'role',
       headerName: 'Role',
       type: 'singleSelect',
