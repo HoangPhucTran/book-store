@@ -1,8 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Put } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Order } from './entities/order.entity';
 import { OrderDto } from './dtos/order.dto';
-import { OrderRequestDto } from './dtos/order.request.dto';
+import { OrderEditRequestDto, OrderRequestDto } from './dtos/order.request.dto';
 import { OrderListResponseDto } from './dtos/orderList.response.dto';
 import { OrderDetailsResponseDto } from './dtos/orderDetails.response.dto';
 
@@ -22,8 +22,8 @@ export class OrderController {
         return this.orderService.findOneById(id);
     }
 
-    @Put(':id')
-    async editOrder(@Param('id') id: string, @Body() dto: OrderRequestDto) : Promise<any> {
+    @Patch(':id')
+    async editOrder(@Param('id') id: string, @Body() dto: OrderEditRequestDto) : Promise<any> {
         return this.orderService.edit(id, dto);
     }
 

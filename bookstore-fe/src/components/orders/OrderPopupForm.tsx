@@ -14,6 +14,7 @@ import {
   TableBody,
   Paper,
   TextField,
+  MenuItem,
 } from '@mui/material';
 import {useEffect, useState } from 'react';
 import type { OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
@@ -158,6 +159,16 @@ export default function OrderPopupForm({ open, order, onClose, onSubmit }: Props
 
         setForm(newForm);
 
+        setErrors(validate(newForm));
+    };
+
+    const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const newForm = {
+            ...form,
+            status: e.target.value as StatusType
+        };
+
+        setForm(newForm);
         setErrors(validate(newForm));
     };
 
@@ -321,7 +332,7 @@ export default function OrderPopupForm({ open, order, onClose, onSubmit }: Props
                                     <TableCell align="right">
                                         <TextField
                                             required
-                                            sx={{width: 200}}
+                                            sx={{width: 200, textAlign: 'center'}}
                                             type='number'
                                             value={item.quantity}
                                             onChange={handleQuantityChange(item.bookId, index)}
@@ -335,13 +346,33 @@ export default function OrderPopupForm({ open, order, onClose, onSubmit }: Props
                                     </TableRow>
                                 ))}
                                 <TableRow>
-                                    <TableCell rowSpan={2} />
+                                    <TableCell rowSpan={3} />
                                     <TableCell colSpan={2}>Total Items</TableCell>
                                     <TableCell align="right">{ccyFormat(totalItem)}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                     <TableCell colSpan={2}>Total</TableCell>
                                     <TableCell align="right">{`${ccyFormat(totalPrice)} $`}</TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell colSpan={2}>Order Status</TableCell>
+                                    <TableCell align="right">
+                                        <TextField
+                                        select
+                                        required
+                                        sx={{ width: 200 }}
+                                        value={form.status}
+                                        onChange={handleStatusChange}
+                                        error={!!errors.status}
+                                        helperText={errors.status}
+                                    >
+                                        {STATUS_TYPE.map((status) => (
+                                            <MenuItem key={status} value={status}>
+                                                {status}
+                                            </MenuItem>
+                                        ))}
+                                    </TextField>
+                                    </TableCell>
                                 </TableRow>
                                 </TableBody>
                             </Table>

@@ -189,30 +189,7 @@ export default function UserTable() {
             mt: 2,
           }}
         >
-          <Box sx={{mr: 'auto'}}>
-            <Button
-            variant="contained"
-            component="label"
-            startIcon={<CloudUploadIcon />}
-            >
-              Upload CSV
-              <input
-                type="file"
-                accept=".csv"
-                hidden
-              />
-            </Button>
-
-            <Button
-            variant="outlined"
-            component='a'
-            sx={{ ml: 1 }}
-            download
-            startIcon={<CloudDownloadIcon />}
-            >
-              Download CSV Template
-            </Button>
-          </Box>
+          
           
           <Button
             variant="contained"

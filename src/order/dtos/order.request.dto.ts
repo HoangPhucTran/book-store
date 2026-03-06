@@ -11,3 +11,13 @@ export class OrderRequestDto {
         price: number,
     }[];
 }
+
+export class OrderEditRequestDto {
+    id: string;
+    status: StatusType;
+    totalPrice: number;
+    item: {
+        bookId: string,
+        quantity: number,
+    }[];
+}

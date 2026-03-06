@@ -14,27 +14,27 @@ import {
   TableBody,
   Paper,
   TextField,
+  MenuItem,
 } from "@mui/material";
 
 import { useEffect, useState } from "react";
 
 import type {
   OrderDetailsResponseDto,
-  OrderRequestDto,
+  OrderEditRequestDto,
   StatusType,
 } from "../../dtos/orders/order.dto";
 
 interface Props {
   open: boolean;
-  order?: OrderDetailsResponseDto;
+  order: OrderDetailsResponseDto | null;
   onClose: () => void;
-  onSubmit: (order: OrderRequestDto) => Promise<void>;
+  onSubmit: (order: OrderEditRequestDto) => Promise<void>;
 }
 
 const STATUS_TYPE: StatusType[] = ["PENDING", "PAID", "CANCELLED"];
 
 type FormErrors = {
-  userId?: string;
   status?: string;
   item?: {
     bookId?: string;
@@ -42,17 +42,8 @@ type FormErrors = {
   }[];
 };
 
-const initialForm: OrderRequestDto = {
-  userId: "",
-  status: "PENDING",
-  totalPrice: 0,
-  item: [],
-};
-
-const validate = (data: OrderRequestDto): FormErrors => {
+const validate = (data: OrderEditRequestDto, orderDetails: OrderDetailsResponseDto | null): FormErrors => {
   const errs: FormErrors = {};
-
-  if (!data.userId?.trim()) errs.userId = "Buyer is required";
 
   if (!Array.isArray(data.item) || data.item.length === 0) {
     errs.item = [{ bookId: "Book is required" }];
@@ -64,12 +55,12 @@ const validate = (data: OrderRequestDto): FormErrors => {
   data.item.forEach((item, index) => {
     const itemErr: { bookId?: string; quantity?: string } = {};
 
-    if (!item.bookId?.trim()) itemErr.bookId = "Book is required";
-
     if (item.quantity === null || item.quantity === undefined)
       itemErr.quantity = "Quantity is required";
     else if (!Number.isInteger(item.quantity) || item.quantity <= 0)
-      itemErr.quantity = "Quantity must be integer > 0";
+      itemErr.quantity = "Quantity must be integer and > 0";
+    else if ( orderDetails && item.quantity > orderDetails.item[index].stock )
+      itemErr.quantity = "Quantity must be less than stock quantity";
 
     itemErrors[index] = itemErr;
   });
@@ -82,6 +73,18 @@ const validate = (data: OrderRequestDto): FormErrors => {
   return errs;
 };
 
+const initialForm: OrderEditRequestDto = {
+  id: "",
+  status: 'PENDING',
+  item: [
+    {
+      bookId: '',
+      quantity: null,
+    },
+  ],
+  totalPrice: null,
+}
+
 export default function OrderDetailsPopupForm({
   open,
   order,
@@ -91,7 +94,7 @@ export default function OrderDetailsPopupForm({
   const [orderDetails, setOrderDetails] =
     useState<OrderDetailsResponseDto | null>(null);
 
-  const [form, setForm] = useState<OrderRequestDto>(initialForm);
+  const [form, setForm] = useState<OrderEditRequestDto>(initialForm);
 
   const [errors, setErrors] = useState<FormErrors>({});
 
@@ -101,16 +104,25 @@ export default function OrderDetailsPopupForm({
     setOrderDetails(order);
 
     setForm({
-      userId: order.userId,
+      id: order.id,
       status: order.status,
       totalPrice: order.totalPrice,
       item: order.item.map((i) => ({
         bookId: i.bookId,
         quantity: i.quantity,
-        price: i.price,
       })),
     });
   }, [open, order]);
+
+  const handleStatusChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const newForm = {
+          ...form,
+          status: e.target.value as StatusType
+      };
+
+      setForm(newForm);
+      setErrors(validate(newForm, orderDetails));
+  };
 
   const handleQuantityChange =
     (index: number) => (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,28 +142,27 @@ export default function OrderDetailsPopupForm({
       const newOrderDetails = {
         ...orderDetails,
         item: newItems,
-        totalPrice,
+        totalPrice: totalPrice,
       };
 
       setOrderDetails(newOrderDetails);
 
-      const newForm: OrderRequestDto = {
-        userId: newOrderDetails.userId,
+      const newForm: OrderEditRequestDto = {
+        id: orderDetails.id,
         status: newOrderDetails.status,
         totalPrice,
         item: newItems.map((i) => ({
           bookId: i.bookId,
           quantity: i.quantity,
-          price: i.price,
         })),
       };
 
       setForm(newForm);
-      setErrors(validate(newForm));
+      setErrors(validate(newForm, newOrderDetails));
     };
 
   const handleSubmit = async () => {
-    const validationErrors = validate(form);
+    const validationErrors = validate(form, orderDetails);
 
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -192,6 +203,7 @@ export default function OrderDetailsPopupForm({
                     <TableRow>
                       <TableCell>Items</TableCell>
                       <TableCell align="right">Qty</TableCell>
+                      <TableCell align="right">Stock Qty</TableCell>
                       <TableCell align="right">Price</TableCell>
                       <TableCell align="right">Sum</TableCell>
                     </TableRow>
@@ -209,8 +221,12 @@ export default function OrderDetailsPopupForm({
                             onChange={handleQuantityChange(index)}
                             error={!!errors.item?.[index]?.quantity}
                             helperText={errors.item?.[index]?.quantity}
-                            sx={{ width: 120 }}
+                            sx={{ width: 160 }}
                           />
+                        </TableCell>
+
+                        <TableCell align="right">
+                          {item.stock}
                         </TableCell>
 
                         <TableCell align="right">
@@ -224,15 +240,35 @@ export default function OrderDetailsPopupForm({
                     ))}
 
                     <TableRow>
-                      <TableCell colSpan={2}>Total Items</TableCell>
+                      <TableCell colSpan={4}>Total Items</TableCell>
                       <TableCell align="right">{totalItem}</TableCell>
                     </TableRow>
 
                     <TableRow>
-                      <TableCell colSpan={2}>Total</TableCell>
+                      <TableCell colSpan={4}>Total</TableCell>
                       <TableCell align="right">
                         {ccyFormat(totalPrice)} $
                       </TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell colSpan={4}>Order Status</TableCell>
+                        <TableCell align="right">
+                            <TextField
+                            select
+                            required
+                            sx={{ width: 150, textAlign: 'center' }}
+                            value={form.status}
+                            onChange={handleStatusChange}
+                            error={!!errors.status}
+                            helperText={errors.status}
+                        >
+                            {STATUS_TYPE.map((status) => (
+                                <MenuItem key={status} value={status}>
+                                    {status}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                        </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

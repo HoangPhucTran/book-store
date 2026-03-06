@@ -5,7 +5,7 @@ export async function getBooks() {
     return api.get('/books');
 }
 
-export async function getBookById(id: string) {
+export async function getBookById(id: string) : Promise<BookDto> {
     const reponse = await api.get(`/books/${id}`);
     return reponse.data;
 }

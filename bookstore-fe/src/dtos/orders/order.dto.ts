@@ -22,8 +22,18 @@ export interface OrderRequestDto {
     }[];
 }
 
+export interface OrderEditRequestDto {
+    id: string;
+    status: StatusType;
+    totalPrice: number | null;
+    item: {
+        bookId: string,
+        quantity: number | null,
+    }[];
+}
+
 export interface OrderDetailsResponseDto {
-    id?: string;
+    id: string;
     userId: string;
     name: string;
     status: StatusType;

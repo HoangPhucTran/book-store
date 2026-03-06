@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Order, StatusType } from './entities/order.entity';
 import { Repository } from 'typeorm';
 import { OrderDto } from './dtos/order.dto';
-import { OrderRequestDto } from './dtos/order.request.dto';
+import { OrderEditRequestDto, OrderRequestDto } from './dtos/order.request.dto';
 import { User } from 'src/user/entities/user.entity';
 import { Book } from 'src/book/entities/book.entity';
 import { OrderItem } from './entities/order-item.entity';
@@ -61,6 +61,7 @@ export class OrderService {
             });
 
             const orderDetails: OrderDetailsResponseDto = {
+                id: order.id,
                 userId: order.userId,
                 name: order.user.name,
                 status: order.orderStatus,
@@ -122,18 +123,54 @@ export class OrderService {
         }
     }
 
-    async edit(id: string, orderDto: OrderRequestDto): Promise<Order> {
+    async edit(id: string, orderDto: OrderEditRequestDto): Promise<Order> {
         try {
-            const order = await this.findOneById(id);
+            const order = await this.orderRepository.findOne({
+                where: { id },
+            });
 
             if (!order)
                 throw new NotFoundException('Order not found');
 
-            Object.assign(order, orderDto);
+            order.orderStatus = orderDto.status;
+            order.totalPrice = orderDto.totalPrice;
 
-            const saveOrder = await this.orderRepository.save(order);
+            await this.orderRepository.save(order);
 
-            return saveOrder;
+            const orderItems = await this.orderItemRepository.find({
+                where: { orderId: order.id },
+            });
+
+            if (!orderItems)
+                throw new NotFoundException('Order Item not found');
+
+            for (const dtoItem of orderDto.item) {
+
+                const book = await this.bookRepository.findOne({
+                    where: { id: dtoItem.bookId }
+                });
+
+                if (!book) throw new Error("Book not found");
+
+                const orderItem = orderItems.find(
+                    (i) => i.bookId === dtoItem.bookId
+                );
+
+                if (!orderItem) throw new Error("Book not found");
+
+                await this.bookRepository.update(
+                    { id: dtoItem.bookId },
+                    { stock: book.stock - (dtoItem.quantity - orderItem.quantity) }
+                );
+
+                if (orderItem) {
+                    orderItem.quantity = dtoItem.quantity;
+
+                    await this.orderItemRepository.save(orderItem);
+                }
+            }
+
+            return order;
         } catch (er) {
             throw new Error('Edit order failed: ' + er.message);
         }
@@ -141,6 +178,19 @@ export class OrderService {
 
     async delete(id: string) : Promise<void> {
         try {
+            const orderItems = await this.orderItemRepository.find({
+                where: { orderId: id },
+            });
+
+            if (!orderItems)
+                throw new NotFoundException('Order Item not found');
+
+            for (const dtoItem of orderItems) {
+                await this.orderItemRepository.delete({
+                    id: dtoItem.id
+                });
+            }
+            
             await this.orderRepository.delete(id);
         } catch (error) {
             throw new Error('Delete order failed: ' + error.message);

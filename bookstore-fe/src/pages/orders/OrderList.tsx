@@ -9,7 +9,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
 // import OrderPopupForm from '../../components/orders/OrderPopupForm';
 import AlertDialogForm from '../../components/common/AlertDialog';
-import type {OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
+import type {OrderDetailsResponseDto, OrderEditRequestDto, OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
 import OrderPopupForm from '../../components/orders/OrderPopupForm';
 import OrderDetailsPopupForm from '../../components/orders/OrderDetailsForm';
 
@@ -28,7 +28,7 @@ export default function OrderTable() {
   const [loading, setLoading] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [openDetailsForm, setOpenDetailsForm] = useState(false);
-  const [pickedOrder, setPickedOrder] = useState<OrderRequestDto | null> (null);
+  const [pickedOrder, setPickedOrder] = useState<OrderDetailsResponseDto | null> (null);
   const [openAlert, setOpenAlert] = useState(false);
   const [alertContent, setAlertContent] = useState<string>("");
   const [alertTitle, setAlertTitle] = useState<string>("");
@@ -45,16 +45,6 @@ export default function OrderTable() {
     onInit();
   },[]);
 
-  const processRowUpdate = async (newRow: OrderRequestDto, oldRow: OrderRequestDto) => {
-    try {
-      await editOrder(newRow);
-      return newRow; // ✅ commit
-    } catch (error) {
-      console.error(error);
-      return oldRow; // ✅ rollback
-    }
-  };
-
   const handleEditOrder = async (id: string) => {
     try {
       const order = await getOrderById(id);
@@ -62,6 +52,7 @@ export default function OrderTable() {
       if (!order)
         return;
 
+      console.log("Edit details", order);
       setPickedOrder(order);   
       setOpenDetailsForm(true);     
     } catch (err) {
@@ -88,13 +79,13 @@ export default function OrderTable() {
     }
   };
 
-  const handleSubmitOrder = async (order: OrderRequestDto) => {
+  const handleSubmitOrder = async (order: OrderRequestDto | OrderEditRequestDto) => {
     try {
       if(pickedOrder !== null) {
-        await editOrder(order);
+        await editOrder(order as OrderEditRequestDto);
       }
       else {
-        await addOrder(order);
+        await addOrder(order as OrderRequestDto);
       }
       const res = await getOrders();
       setRows(res.data);
@@ -178,7 +169,6 @@ export default function OrderTable() {
           columns={orderColumns}
           loading={loading}
           editMode="cell"
-          processRowUpdate={processRowUpdate}
           pageSizeOptions={[10]}
           initialState={{
             pagination: {
@@ -194,30 +184,7 @@ export default function OrderTable() {
             mt: 2,
           }}
         >
-          <Box sx={{mr: 'auto'}}>
-            <Button
-            variant="contained"
-            component="label"
-            startIcon={<CloudUploadIcon />}
-            >
-              Upload CSV
-              <input
-                type="file"
-                accept=".csv"
-                hidden
-              />
-            </Button>
-
-            <Button
-            variant="outlined"
-            component='a'
-            sx={{ ml: 1 }}
-            download
-            startIcon={<CloudDownloadIcon />}
-            >
-              Download CSV Template
-            </Button>
-          </Box>
+          
           
           <Button
             variant="contained"
@@ -245,6 +212,7 @@ export default function OrderTable() {
             open={openForm}
             onClose={() => {
               setOpenForm(false);
+              setPickedOrder(null);
             }}
             onSubmit={handleSubmitOrder}
           />
