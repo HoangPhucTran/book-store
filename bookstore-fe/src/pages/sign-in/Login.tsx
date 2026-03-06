@@ -82,7 +82,8 @@ export default function SignIn({onSuccess, ...props}: SignInProp ) {
     const password = data.get('password') as string;
 
     try {
-      const accessToken = await login(username, password);
+      const access_token = await login(username, password);
+      localStorage.setItem("access_token", access_token);
       onSuccess();
     //   saveToken(accessToken);
       navigate('/users')
@@ -172,7 +173,7 @@ export default function SignIn({onSuccess, ...props}: SignInProp ) {
                 error={passwordError}
                 helperText={passwordErrorMessage}
                 name="password"
-                placeholder="••••••"
+                placeholder="Enter Password"
                 type="password"
                 id="password"
                 autoComplete="current-password"

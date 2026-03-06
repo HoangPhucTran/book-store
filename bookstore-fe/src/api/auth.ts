@@ -11,5 +11,5 @@ export async function login(username: string, password: string) {
     password,
   });
 
-  return res.data.accessToken;
+  return res.data.access_token;
 }
