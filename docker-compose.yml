@@ -10,6 +10,20 @@ services:
     depends_on:
       - redis
       - nats
+    environment:
+      - REDIS_HOST=nest_redis_dev
+      - REDIS_PORT=6379
+  nest_notification:
+    build:
+      context: ./notification
+    container_name: nest_notification_dev
+    depends_on:
+      - nats
+    networks:
+      - app-network
+    environment:
+      - NATS_URL=nats://nest_nats:4222
+    restart: always
 
   react_app:
     build: ./bookstore-fe
@@ -24,13 +38,14 @@ services:
     stdin_open: true
 
   postgres:
-    image: postgres:15
+    image: postgres:18
     container_name: nest_postgres_dev
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: bookstore
     network_mode: "service:nest_api"
-
+    volumes:
+      - ./database/all_schemas.sql:/docker-entrypoint-initdb.d/all_schemas.sql
   redis:
     image: redis:7
     container_name: nest_redis_dev
@@ -43,3 +58,8 @@ services:
     ports:
       - "4222:4222"
       - "8222:8222"
+    networks:
+      - app-network
+networks:
+  app-network:
+    driver: bridge

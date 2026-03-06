@@ -3,7 +3,7 @@ CREATE SCHEMA public;
 SET search_path TO public;
 
 \c bookstore;
-
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- USERS TABLE
 DROP TABLE IF EXISTS USERS CASCADE;
 

@@ -58,14 +58,14 @@ import { AuthModule } from './auth/auth.module';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService,
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: CacheInterceptor,
-    },
+  providers: [
+    AppService,
+    // {
+    //   provide: APP_INTERCEPTOR,
+    //   useClass: CacheInterceptor,
+    // },
   ],
 })
-
 export class AppModule {
   constructor(private readonly dataSource: DataSource) {
     console.log('DB connected', dataSource.isInitialized);

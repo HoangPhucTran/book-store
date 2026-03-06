@@ -20,7 +20,7 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, documentFactory);
 
   const redis = new Redis({
-    host: 'localhost',
+    host: process.env.REDIS_HOST || 'localhost',
     port: 6379,
     maxRetriesPerRequest: 1,
   });

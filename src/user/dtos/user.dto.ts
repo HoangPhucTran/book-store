@@ -1,19 +1,19 @@
-import { IsEnum, IsString } from "class-validator";
-import { UserRole } from "../entities/user.entity";
+import { IsEnum, IsString } from 'class-validator';
+import { UserRole } from '../entities/user.entity';
 
 export class UserDto {
-    @IsString()
-    id: string;
+  @IsString()
+  id: string;
 
-    @IsString()
-    username: string;
+  @IsString()
+  username: string;
 
-    @IsString()
-    password: string;
+  @IsString()
+  password: string;
 
-    @IsString()
-    name: string;
+  @IsString()
+  name: string;
 
-    @IsEnum(UserRole)
-    role: UserRole;
+  @IsEnum(UserRole)
+  role: UserRole;
 }

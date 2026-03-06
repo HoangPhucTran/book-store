@@ -6,7 +6,7 @@ export function logout() {
 }
 
 export async function login(username: string, password: string) {
-  const res = await api.post('/auth/login', {
+  const res = await api.post('/login/', {
     username,
     password,
   });
