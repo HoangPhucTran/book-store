@@ -53,7 +53,7 @@ export default function Header() {
           sizes="small"
           alt={"guess"}
           src={""}
-          sx={{ width: 36, height: 36 }} 
+          sx={{ width: 36, height: 36, cursor: 'pointer' }} 
           onClick={() => setOpenForm(true)}
         />
       </Stack>
