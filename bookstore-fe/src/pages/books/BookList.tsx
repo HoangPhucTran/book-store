@@ -45,10 +45,10 @@ export default function BookTable() {
   const processRowUpdate = async (newRow: BookDto, oldRow: BookDto) => {
     try {
       await editBook(newRow);
-      return newRow; // ✅ commit
+      return newRow; // ?�� commit
     } catch (error) {
       console.error(error);
-      return oldRow; // ✅ rollback
+      return oldRow; // ?�� rollback
     }
   };
 
