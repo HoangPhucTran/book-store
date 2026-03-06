@@ -10,6 +10,14 @@ export interface OrderDto {
     status: StatusType;
 }
 
+export interface OrderListResponseDto {
+    id: string;
+    userName: string;
+    status: StatusType;
+    totalPrice: number;
+    createDate: Date;
+}
+
 export interface OrderRequestDto {
     id?: string;
     userId: string;
@@ -24,9 +32,9 @@ export interface OrderRequestDto {
 
 export interface OrderEditRequestDto {
     id: string;
-    status: StatusType;
-    totalPrice: number | null;
-    item: {
+    status?: StatusType;
+    totalPrice?: number | null;
+    item?: {
         bookId: string,
         quantity: number | null,
     }[];

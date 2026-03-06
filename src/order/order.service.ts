@@ -132,41 +132,47 @@ export class OrderService {
             if (!order)
                 throw new NotFoundException('Order not found');
 
-            order.orderStatus = orderDto.status;
-            order.totalPrice = orderDto.totalPrice;
+            if (orderDto?.status !== undefined)
+                order.orderStatus = orderDto.status;
+
+            if (orderDto?.totalPrice !== undefined)
+                order.totalPrice = orderDto?.totalPrice;
 
             await this.orderRepository.save(order);
 
-            const orderItems = await this.orderItemRepository.find({
-                where: { orderId: order.id },
-            });
-
-            if (!orderItems)
-                throw new NotFoundException('Order Item not found');
-
-            for (const dtoItem of orderDto.item) {
-
-                const book = await this.bookRepository.findOne({
-                    where: { id: dtoItem.bookId }
+            if (orderDto?.item !== undefined) {
+                
+                const orderItems = await this.orderItemRepository.find({
+                    where: { orderId: order.id },
                 });
 
-                if (!book) throw new Error("Book not found");
+                if (!orderItems)
+                    throw new NotFoundException('Order Item not found');
 
-                const orderItem = orderItems.find(
-                    (i) => i.bookId === dtoItem.bookId
-                );
+                for (const dtoItem of orderDto.item) {
 
-                if (!orderItem) throw new Error("Book not found");
+                    const book = await this.bookRepository.findOne({
+                        where: { id: dtoItem.bookId }
+                    });
 
-                await this.bookRepository.update(
-                    { id: dtoItem.bookId },
-                    { stock: book.stock - (dtoItem.quantity - orderItem.quantity) }
-                );
+                    if (!book) throw new Error("Book not found");
 
-                if (orderItem) {
-                    orderItem.quantity = dtoItem.quantity;
+                    const orderItem = orderItems.find(
+                        (i) => i.bookId === dtoItem.bookId
+                    );
 
-                    await this.orderItemRepository.save(orderItem);
+                    if (!orderItem) throw new Error("Book not found");
+
+                    await this.bookRepository.update(
+                        { id: dtoItem.bookId },
+                        { stock: book.stock - (dtoItem.quantity - orderItem.quantity) }
+                    );
+
+                    if (orderItem) {
+                        orderItem.quantity = dtoItem.quantity;
+
+                        await this.orderItemRepository.save(orderItem);
+                    }
                 }
             }
 

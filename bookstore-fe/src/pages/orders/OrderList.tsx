@@ -2,14 +2,12 @@ import { DataGrid, useGridApiContext } from '@mui/x-data-grid';
 import { Box, Button, Chip, IconButton } from '@mui/material';
 import { useEffect, useState } from 'react';
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
-import CloudDownloadIcon from '@mui/icons-material/CloudDownload';
 import { addOrder, deleteOrder, editOrder, getOrderById, getOrders } from '../../api/orders/order.api';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ModeEditIcon from '@mui/icons-material/ModeEdit';
 // import OrderPopupForm from '../../components/orders/OrderPopupForm';
 import AlertDialogForm from '../../components/common/AlertDialog';
-import type {OrderDetailsResponseDto, OrderEditRequestDto, OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
+import type {OrderDetailsResponseDto, OrderEditRequestDto, OrderListResponseDto, OrderRequestDto, StatusType } from '../../dtos/orders/order.dto';
 import OrderPopupForm from '../../components/orders/OrderPopupForm';
 import OrderDetailsPopupForm from '../../components/orders/OrderDetailsForm';
 
@@ -44,6 +42,20 @@ export default function OrderTable() {
 
     onInit();
   },[]);
+
+  const processRowUpdate = async (newRow: OrderListResponseDto, oldRow: OrderListResponseDto) => {
+    try {
+      const editRow: OrderEditRequestDto = {
+        id: newRow.id,
+        status: newRow.status
+      }
+      await editOrder(editRow);
+      return newRow; // ✅ commit
+    } catch (error) {
+      console.error(error);
+      return oldRow; // ✅ rollback
+    }
+  };
 
   const handleEditOrder = async (id: string) => {
     try {
@@ -113,13 +125,13 @@ export default function OrderTable() {
       field: 'userName',
       headerName: 'Customer Name',
       flex: 1,
-      editable: true,
+      editable: false,
     },
     {
       field: 'totalPrice',
       headerName: 'Total Price',
       flex: 1,
-      editable: true,
+      editable: false,
     },
     {
       field: 'status',
@@ -168,6 +180,7 @@ export default function OrderTable() {
           rows={rows}
           columns={orderColumns}
           loading={loading}
+          processRowUpdate={processRowUpdate}
           editMode="cell"
           pageSizeOptions={[10]}
           initialState={{

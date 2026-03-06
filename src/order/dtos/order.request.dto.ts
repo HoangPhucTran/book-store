@@ -1,3 +1,4 @@
+import { PartialType } from "@nestjs/swagger";
 import { StatusType } from "../entities/order.entity";
 
 export class OrderRequestDto {
@@ -14,9 +15,9 @@ export class OrderRequestDto {
 
 export class OrderEditRequestDto {
     id: string;
-    status: StatusType;
-    totalPrice: number;
-    item: {
+    status?: StatusType;
+    totalPrice?: number;
+    item?: {
         bookId: string,
         quantity: number,
     }[];
