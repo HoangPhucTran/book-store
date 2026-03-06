@@ -9,7 +9,10 @@ export async function getBookById(id: string) : Promise<BookDto> {
     const reponse = await api.get(`/books/${id}`);
     return reponse.data;
 }
-
+// export async function getBookById(id: string) {
+//     const reponse = await api.get(`/books/${id}`);
+//     return reponse.data;
+// }
 export async function addBook(book: BookDto) {
     return api.post('/books', book);
 }

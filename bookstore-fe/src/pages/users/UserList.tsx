@@ -45,10 +45,10 @@ export default function UserTable() {
   const processRowUpdate = async (newRow: UserDto, oldRow: UserDto) => {
     try {
       await editUser(newRow);
-      return newRow; // âœ… commit
+      return newRow; // ?œ… commit
     } catch (error) {
       console.error(error);
-      return oldRow; // âœ… rollback
+      return oldRow; // ?œ… rollback
     }
   };
 

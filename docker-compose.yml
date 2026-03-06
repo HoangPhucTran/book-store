@@ -1,0 +1,45 @@
+services:
+
+  nest_api:
+    build: .
+    container_name: nest_api_dev
+    ports:
+      - "3001:3001"
+    volumes:
+      - .:/app
+    depends_on:
+      - redis
+      - nats
+
+  react_app:
+    build: ./bookstore-fe
+    container_name: react_dev
+    command: npm run dev -- --host
+
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./bookstore-fe:/app
+      - /app/node_modules
+    stdin_open: true
+
+  postgres:
+    image: postgres:15
+    container_name: nest_postgres_dev
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: bookstore
+    network_mode: "service:nest_api"
+
+  redis:
+    image: redis:7
+    container_name: nest_redis_dev
+    ports:
+      - "6379:6379"
+
+  nats:
+    image: nats:2
+    container_name: nest_nats
+    ports:
+      - "4222:4222"
+      - "8222:8222"
