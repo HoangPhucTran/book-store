@@ -10,6 +10,7 @@ import {
 import { UserService } from './user.service';
 import { UserDto } from './dtos/user.dto';
 import { User } from './entities/user.entity';
+import { UserListDto } from './dtos/user-list.dto';
 import { UseInterceptors } from '@nestjs/common';
 import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager';
 
@@ -17,12 +18,12 @@ import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseInterceptors(CacheInterceptor)
-  @CacheKey('users')
-  @Get()
-  async getUsers(): Promise<User[]> {
-    return this.userService.findAll();
-  }
+    @UseInterceptors(CacheInterceptor)
+    @CacheKey('users')
+    @Get()
+    async getUsers() : Promise <UserListDto[]> {
+        return this.userService.findAll();
+    }
 
   @Get(':id')
   async getUserById(@Param('id') id: string): Promise<User | null> {

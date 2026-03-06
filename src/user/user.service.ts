@@ -3,8 +3,10 @@ import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserDto } from './dtos/user.dto';
+import { UserListDto } from './dtos/user-list.dto';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
+
 @Injectable()
 export class UserService {
   constructor(
@@ -14,9 +16,16 @@ export class UserService {
     private cacheManager: Cache,
   ) {}
 
-  async findAll(): Promise<User[]> {
-    return await this.userRepository.find();
-  }
+    async findAll() : Promise<UserListDto[]> {
+        const users = await this.userRepository.find();
+
+        return users.map(user => ({
+            id: user.id,
+            username: user.username,
+            name: user.name,
+            role: user.role
+        }));
+    }
 
   async findByUsername(username: string): Promise<User | null> {
     return await this.userRepository.findOneBy({

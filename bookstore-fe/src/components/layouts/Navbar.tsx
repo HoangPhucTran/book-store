@@ -3,6 +3,7 @@ import MuiDrawer, { drawerClasses } from '@mui/material/Drawer';
 import Stack from "@mui/material/Stack";
 import { Avatar, Box, Button, Typography } from "@mui/material";
 import NavbarContent from "./NavbarContent";
+import { logout } from "../../api/auth";
 
 const drawerWidth = 240;
 
@@ -75,7 +76,7 @@ export default function SideMenu() {
         }}
       >
         <NavbarContent />
-         <Button variant="contained" size="small" fullWidth >
+         <Button variant="contained" size="small" fullWidth onClick={() => logout()}>
           Logout
         </Button>
       </Box>

@@ -45,10 +45,10 @@ export default function BookTable() {
   const processRowUpdate = async (newRow: BookDto, oldRow: BookDto) => {
     try {
       await editBook(newRow);
-      return newRow; // ?œ… commit
+      return newRow; // ?ï¿½ï¿½ commit
     } catch (error) {
       console.error(error);
-      return oldRow; // ?œ… rollback
+      return oldRow; // ?ï¿½ï¿½ rollback
     }
   };
 
@@ -138,6 +138,11 @@ export default function BookTable() {
       headerName: 'Create Date',
       flex: 1,
       editable: false,
+      type: 'dateTime',
+      valueFormatter: (value) => {
+        const date = new Date(value);
+        return date.toLocaleString('vi-VN');
+      },
     },
     {
       field: 'actions',
