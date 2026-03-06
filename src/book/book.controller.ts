@@ -10,11 +10,14 @@ import {
 import { BookService } from './book.service';
 import { Book } from './entities/book.entity';
 import { BookDto } from './dtos/book.dto';
-
+import { UseInterceptors } from '@nestjs/common';
+import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager';
 @Controller('books')
 export class BookController {
   constructor(private readonly bookService: BookService) {}
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('books')
   @Get()
   async getBooks(): Promise<Book[]> {
     return this.bookService.findAll();

@@ -1,14 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UserDto } from './dtos/user.dto';
-
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 @Injectable()
 export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @Inject(CACHE_MANAGER)
+    private cacheManager: Cache,
   ) {}
 
   async findAll(): Promise<User[]> {
@@ -37,6 +40,7 @@ export class UserService {
       });
 
       const saveUser = await this.userRepository.save(user);
+      await this.cacheManager.del('users');
       return saveUser;
     } catch (er) {
       throw new Error('Create user failed: ' + er.message);
@@ -55,6 +59,7 @@ export class UserService {
       user.role = userDto.role;
 
       const saveUser = await this.userRepository.save(user);
+      await this.cacheManager.del('users');
       return saveUser;
     } catch (er) {
       throw new Error('Edit user failed: ' + er.message);

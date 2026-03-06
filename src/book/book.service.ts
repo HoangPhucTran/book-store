@@ -1,14 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Book } from './entities/book.entity';
 import { Repository } from 'typeorm';
 import { BookDto } from './dtos/book.dto';
-
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 @Injectable()
 export class BookService {
   constructor(
     @InjectRepository(Book)
     private readonly bookRepository: Repository<Book>,
+    @Inject(CACHE_MANAGER)
+    private cacheManager: Cache,
   ) {}
 
   async findAll(): Promise<Book[]> {
@@ -31,7 +34,8 @@ export class BookService {
       });
 
       const saveBook = await this.bookRepository.save(book);
-
+      console.log('Book edited: ', saveBook);
+      await this.cacheManager.del('books');
       return saveBook;
     } catch (er) {
       throw new Error('Create book failed: ' + er.message);
@@ -50,6 +54,8 @@ export class BookService {
       book.stock = bookDto.stock;
 
       const saveBook = await this.bookRepository.save(book);
+      console.log('Book edited: ', saveBook);
+      await this.cacheManager.del('books');
       return saveBook;
     } catch (er) {
       throw new Error('Edit book failed: ' + er.message);
@@ -59,6 +65,7 @@ export class BookService {
   async delete(id: string): Promise<void> {
     try {
       await this.bookRepository.delete(id);
+      await this.cacheManager.del('orders');
     } catch (error) {
       throw new Error('Delete book failed: ' + error.message);
     }

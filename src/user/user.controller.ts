@@ -10,11 +10,15 @@ import {
 import { UserService } from './user.service';
 import { UserDto } from './dtos/user.dto';
 import { User } from './entities/user.entity';
+import { UseInterceptors } from '@nestjs/common';
+import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('users')
   @Get()
   async getUsers(): Promise<User[]> {
     return this.userService.findAll();

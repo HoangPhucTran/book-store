@@ -13,13 +13,17 @@ import { BookDto } from 'src/book/dtos/book.dto';
 import { OrderListResponseDto } from './dtos/orderList.response.dto';
 import { OrderDetailsResponseDto } from './dtos/orderDetails.response.dto';
 import { title } from 'process';
-
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import type { Cache } from 'cache-manager';
 @Injectable()
 export class OrderService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
     @Inject('NATS_SERVICE') private natsClient: ClientProxy,
+
+    @Inject(CACHE_MANAGER)
+    private cacheManager: Cache,
 
     @InjectRepository(OrderItem)
     private readonly orderItemRepository: Repository<OrderItem>,
@@ -119,7 +123,7 @@ export class OrderService {
           { stock: book.stock - i.quantity },
         );
       }
-
+      await this.cacheManager.del('orders');
       console.log('Send event:', orderDto);
       this.natsClient.send('order.created', orderDto).subscribe({
         complete: () => console.log('Event published: order.created'),
@@ -145,6 +149,7 @@ export class OrderService {
         order.totalPrice = orderDto?.totalPrice;
 
       await this.orderRepository.save(order);
+      await this.cacheManager.del('orders');
 
       if (orderDto?.item !== undefined) {
         const orderItems = await this.orderItemRepository.find({
@@ -198,6 +203,7 @@ export class OrderService {
       }
 
       await this.orderRepository.delete(id);
+      await this.cacheManager.del('orders');
     } catch (error) {
       throw new Error('Delete order failed: ' + error.message);
     }

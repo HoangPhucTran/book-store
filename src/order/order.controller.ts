@@ -14,11 +14,14 @@ import { OrderDto } from './dtos/order.dto';
 import { OrderEditRequestDto, OrderRequestDto } from './dtos/order.request.dto';
 import { OrderListResponseDto } from './dtos/orderList.response.dto';
 import { OrderDetailsResponseDto } from './dtos/orderDetails.response.dto';
-
+import { UseInterceptors } from '@nestjs/common';
+import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager';
 @Controller('orders')
 export class OrderController {
   constructor(private readonly orderService: OrderService) {}
 
+  @UseInterceptors(CacheInterceptor)
+  @CacheKey('orders')
   @Get()
   async getOrders(): Promise<OrderListResponseDto[]> {
     return this.orderService.findAll();
