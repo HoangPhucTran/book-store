@@ -6,10 +6,10 @@ export function logout() {
 }
 
 export async function login(username: string, password: string) {
-  const res = await api.post('/auth/', {
+  const res = await api.post('/auth/login', {
     username,
     password,
   });
-
-  return res.data.accessToken;
+  console.log("token", res.data.access_token);
+  return res.data.access_token;
 }

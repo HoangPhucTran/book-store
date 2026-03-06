@@ -89,11 +89,6 @@ export default function SignIn({onSuccess, ...props}: SignInProp ) {
     } catch(err) {
       setLoginError('Your username or password is incorrect!');
     }
-    
-    console.log({
-      username: data.get('username'),
-      password: data.get('password'),
-    });
   };
 
   const validateInputs = () => {

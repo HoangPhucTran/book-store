@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { User } from '../user/entities/user.entity';
 import { AuthPayLoad } from './interface/auth-payload/auth-payload.interface';
@@ -21,7 +21,11 @@ export class AuthService {
     }
 
     async comparePass(password: string, storedPass: string): Promise<any> {
-        return await bcrypt.compare(password, storedPass);
+        // const check = await bcrypt.compare(password, storedPass);
+        // console.log("Password", password, "StroredPass", storedPass, "Check", check);
+
+        return password == storedPass;
+
     }
 
     async authentication(username: string, password: string): Promise<any> {
