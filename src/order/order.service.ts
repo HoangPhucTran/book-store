@@ -19,7 +19,7 @@ export class OrderService {
     constructor (
         @InjectRepository(Order)
         private readonly orderRepository: Repository<Order>,
-        @Inject('NATS_SERVICE') private natsClient: ClientProxy
+        @Inject('NATS_SERVICE') private natsClient: ClientProxy,
 
         @InjectRepository(OrderItem)
         private readonly orderItemRepository: Repository<OrderItem>,
