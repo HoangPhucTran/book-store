@@ -6,6 +6,8 @@ import {
   Param,
   Post,
   Put,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserDto } from './dtos/user.dto';
@@ -13,6 +15,7 @@ import { User } from './entities/user.entity';
 import { UserListDto } from './dtos/user-list.dto';
 import { UseInterceptors } from '@nestjs/common';
 import { CacheInterceptor, CacheKey } from '@nestjs/cache-manager';
+import { AuthenticationGuard } from '../auth/guards/auth.guard';
 
 @Controller('users')
 export class UserController {
@@ -24,6 +27,14 @@ export class UserController {
     async getUsers() : Promise <UserListDto[]> {
         return this.userService.findAll();
     }
+
+  @Get('/me')
+  @UseGuards(AuthenticationGuard)
+  async getMe(@Req() req) : Promise<any> {
+      console.log("request", req);
+      const userId = req.user.id;
+      return await this.userService.findOneById(userId);
+  }   
 
   @Get(':id')
   async getUserById(@Param('id') id: string): Promise<User | null> {

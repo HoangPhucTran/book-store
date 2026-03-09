@@ -4,17 +4,22 @@ import UserList from '../pages/users/UserList'
 import BookList from '../pages/books/BookList'
 import OrderList from '../pages/orders/OrderList'
 import SignIn from '../pages/sign-in/Login'
+import ProtectedRoute from '../components/layouts/ProtectedRoute'
+import LoginRoute from '../components/layouts/LoginRoute'
+import { isAuthenticated } from '../api/auth'
 
 const handleLoginSuccess = () => {
     console.log('LOGIN SUCCESS → GO DASHBOARD');
-    // console.log('isAuth'+ isAuthenticated());
+    console.log('isAuth'+ isAuthenticated());
 };
 
 export const router = createBrowserRouter([
     {
         path: '/',
         element: 
-            <BaseLayout/>,
+            <ProtectedRoute>
+                <BaseLayout/>
+            </ProtectedRoute>,
         
         children: [
             {path: 'users', element: <UserList/>},
@@ -26,6 +31,8 @@ export const router = createBrowserRouter([
         path: '/',
         index: true,
         element: 
-        <SignIn onSuccess={handleLoginSuccess} />,
+            <LoginRoute>
+                <SignIn onSuccess={handleLoginSuccess} />
+            </LoginRoute>
     },
 ])

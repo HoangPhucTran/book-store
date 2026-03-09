@@ -12,7 +12,7 @@ import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import { Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import { login } from '../../api/auth';
+import { login, saveToken } from '../../api/auth';
 
 const Card = styled(MuiCard)(({ theme }) => ({
   display: 'flex',
@@ -64,18 +64,10 @@ type SignInProp = {
 
 export default function SignIn({onSuccess, ...props}: SignInProp ) {
   const navigate = useNavigate();
-  const [usernameError, setUsernameError] = React.useState(false);
-  const [usernameErrorMessage, setUsernameErrorMessage] = React.useState('');
-  const [passwordError, setPasswordError] = React.useState(false);
-  const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
   const [loginError, setLoginError] = React.useState<string | null>(null);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    
-    if (usernameError || passwordError) {
-      return;
-    }
 
     const data = new FormData(event.currentTarget);
     const username = data.get('username') as string;
@@ -85,43 +77,11 @@ export default function SignIn({onSuccess, ...props}: SignInProp ) {
       const access_token = await login(username, password);
       localStorage.setItem("access_token", access_token);
       onSuccess();
-    //   saveToken(accessToken);
+      saveToken(access_token);
       navigate('/users')
     } catch(err) {
       setLoginError('Your username or password is incorrect!');
     }
-    
-    console.log({
-      username: data.get('username'),
-      password: data.get('password'),
-    });
-  };
-
-  const validateInputs = () => {
-    const username = document.getElementById('username') as HTMLInputElement;
-    const password = document.getElementById('password') as HTMLInputElement;
-
-    let isValid = true;
-
-    if (!username.value ) { // check username: || !/\S+@\S+\.\S+/.test(username.value)
-      setUsernameError(true);
-      setUsernameErrorMessage('Please enter a valid username.');
-      isValid = false;
-    } else {
-      setUsernameError(false);
-      setUsernameErrorMessage('');
-    }
-
-    if (!password.value) {
-      setPasswordError(true);
-      setPasswordErrorMessage('Password must be at least 6 characters long.');
-      isValid = false;
-    } else {
-      setPasswordError(false);
-      setPasswordErrorMessage('');
-    }
-
-    return isValid;
   };
 
   return (
@@ -153,8 +113,6 @@ export default function SignIn({onSuccess, ...props}: SignInProp ) {
             <FormControl>
               <FormLabel htmlFor="username">Username</FormLabel>
               <TextField
-                error={usernameError}
-                helperText={usernameErrorMessage}
                 id="username"
                 type="username"
                 name="username"
@@ -164,14 +122,12 @@ export default function SignIn({onSuccess, ...props}: SignInProp ) {
                 required
                 fullWidth
                 variant="outlined"
-                color={usernameError ? 'error' : 'primary'}
+                color={'primary'}
               />
             </FormControl>
             <FormControl>
               <FormLabel htmlFor="password">Password</FormLabel>
               <TextField
-                error={passwordError}
-                helperText={passwordErrorMessage}
                 name="password"
                 placeholder="Enter Password"
                 type="password"
@@ -181,7 +137,7 @@ export default function SignIn({onSuccess, ...props}: SignInProp ) {
                 required
                 fullWidth
                 variant="outlined"
-                color={passwordError ? 'error' : 'primary'}
+                color={'primary'}
               />
             </FormControl>
             <FormControlLabel
@@ -192,7 +148,7 @@ export default function SignIn({onSuccess, ...props}: SignInProp ) {
               type="submit"
               fullWidth
               variant="contained"
-              onClick={validateInputs}
+              // onClick={validateInputs}
             >
               Sign in
             </Button>
