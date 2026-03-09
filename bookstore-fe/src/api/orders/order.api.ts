@@ -10,7 +10,7 @@ export async function getOrders() {
       },
     });
 
-    return res.data;
+    return res;
   } catch (error: any) {
     if (error.response?.status === 401) {
       window.location.href = "/unauthorized";
