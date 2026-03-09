@@ -13,6 +13,8 @@ import {
 } from '@mui/material';
 import {useEffect, useState } from 'react';
 import type { UserDto, UserRole } from '../../dtos/users/user.dto';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 
 interface Props {
   open: boolean;
@@ -121,7 +123,7 @@ export default function UserPopupForm({ open, user, onClose, onSubmit }: Props) 
                         endAdornment: (
                         <InputAdornment position='end'>
                             <IconButton disableRipple onClick={() => setShowPassword(!showPassword)}>
-                                {/* {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />} */}
+                                {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
                             </IconButton>
                         </InputAdornment>
                         ),
