@@ -2,9 +2,22 @@ import type { OrderDto, OrderEditRequestDto, OrderRequestDto } from "../../dtos/
 import api from "../axios";
 
 export async function getOrders() {
-    return api.get('/orders');
-}
+  try {
+    const token = localStorage.getItem("access_token");
+    const res = await api.get("/orders", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
+    return res.data;
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      window.location.href = "/unauthorized";
+    }
+    throw error;
+  }
+}
 export async function getOrderById(id: string) {
     const reponse = await api.get(`/orders/${id}`);
     return reponse.data;
