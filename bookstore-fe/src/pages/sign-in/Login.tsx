@@ -77,7 +77,7 @@ export default function SignIn({onSuccess, ...props}: SignInProp ) {
       const access_token = await login(username, password);
       localStorage.setItem("access_token", access_token);
       onSuccess();
-      saveToken(accessToken);
+      saveToken(access_token);
       navigate('/users')
     } catch(err) {
       setLoginError('Your username or password is incorrect!');
